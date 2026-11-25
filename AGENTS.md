@@ -19,6 +19,9 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 | `settings/` | okno nastavení (WinForms, `net10.0-windows`), ukládá JSON a posílá pluginu `reload`/`test` |
 | `src/package/` | obsah balíčku: `metadata/` (LoupedeckPackage.yaml, ikona), `events/` (události a mapování na vibrace) |
 | `design/icon-source.png` | zdroj ikony (1254 × 1254 px, průhledné rohy) |
+| `design/icon.ico` | ikona exe a zástupce, generuje `tools/Convert-IconToIco.ps1` z `icon-source.png` |
+| `tools/Install-StartMenuShortcut.ps1` | zástupce „MX Haptics – nastavení“ v nabídce Start (`-Remove` smaže) |
+| `docs/screenshots/` | screenshoty okna pro README (světlý a tmavý režim) |
 
 ## Sestavení a ladění
 
@@ -43,5 +46,8 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 - Povolené vzory vibrací: `sharp_state_change`, `damp_state_change`, `sharp_collision`, `damp_collision`, `subtle_collision`,
   `happy_alert`, `angry_alert`, `completed`, `square`, `wave`, `firework`, `mad`, `knock`, `jingle`, `ringing`.
 - Hit-test přes MSAA může v zaseknuté aplikaci blokovat. Proto běží ve vlastním vlákně odděleném od detekce oken; tohle oddělení zachovej.
-- Ikonu dodává uživatel. Nekresli vlastní ani ji neupravuj. `Icon256x256.png` je zmenšenina `design/icon-source.png` na 256 × 256 (bikubicky). Při nové ikoně nahraď obojí.
+- Ikonu dodává uživatel. Nekresli vlastní ani ji neupravuj. `Icon256x256.png` je zmenšenina `design/icon-source.png` na 256 × 256 (bikubicky).
+  Při nové ikoně nahraď obojí a pusť `pwsh tools/Convert-IconToIco.ps1`.
+- Po změně vzhledu okna přegeneruj screenshoty: `build\settings\MxHapticsSettings.exe --screenshot docs\screenshots\nastaveni-<dark|light>.png --theme <dark|light>`.
+  Tenhle režim kreslí výchozí nastavení a nic neukládá. Screenshoty okna nedělej snímáním obrazovky, uživatel s oknem může zrovna pracovat.
 - Repozitář je soukromý (`mpeterka/mx-haptics`), větev `main`. Do commitů, PR ani issues nepiš AI patičku.

@@ -14,8 +14,25 @@ Jen Windows. Plugin běží uvnitř Logi Plugin Service, nastavení má samostat
 
 ## Nastavení
 
-**Okno nastavení** otevře akce *Nastavení MX Haptics* (skupina MX Haptics), kterou si v Options+ přiřadíš na tlačítko myši
-nebo do Actions Ringu. Jde ho spustit i přímo: `build/settings/MxHapticsSettings.exe`. V okně můžeš:
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/nastaveni-dark.png">
+  <img src="docs/screenshots/nastaveni-light.png" alt="Okno nastavení MX Haptics" width="520">
+</picture>
+
+### Jak okno otevřít
+
+1. **Nabídka Start:** napiš „MX Haptics“ a spusť *MX Haptics – nastavení*.
+   Zástupce vytvoří `pwsh tools/Install-StartMenuShortcut.ps1` (smaže ho `-Remove`).
+2. **Tlačítkem myši nebo z Actions Ringu:** v Logi Options+ otevři MX Master 4, vyber tlačítko (nebo Actions Ring)
+   a v akcích nainstalovaných pluginů zvol **MX Haptics → Nastavení MX Haptics**. Pokud tam MX Haptics není,
+   dej v nastavení Options+ *Restart Logi Plugin Service*.
+3. **Přímo:** `build\settings\MxHapticsSettings.exe`.
+
+Okno běží vždy jen jednou. Další spuštění přenese otevřené okno do popředí.
+
+### Co jde nastavit
+
+V okně můžeš:
 
 - celou haptiku zapnout nebo vypnout,
 - každou reakci zvlášť zapnout nebo vypnout,
@@ -24,7 +41,10 @@ nebo do Actions Ringu. Jde ho spustit i přímo: `build/settings/MxHapticsSettin
 
 Změny se ukládají hned do `%LOCALAPPDATA%\MxHaptics\settings.json` a plugin je načte bez restartu.
 
-Další ovládání:
+Okno se řídí světlým nebo tmavým režimem Windows. Když plugin neběží, napíše to oranžově ve spodní liště
+a nastavení se použije po jeho spuštění.
+
+### Další ovládání
 
 - **Celý plugin:** Options+ → nastavení myši → *Enable haptic for app plugins* → MX Haptics.
 - **Celková síla vibrací myši:** nastavení haptiky myši v Options+ (platí pro všechno).
@@ -64,7 +84,17 @@ Logy: `%LOCALAPPDATA%\Logi\LogiPluginService\Logs\plugin_logs\MxHaptics.log`.
 ## Ikona
 
 Zdroj ve vysokém rozlišení je [`design/icon-source.png`](design/icon-source.png). Plugin používá jeho zmenšeninu
-`src/package/metadata/Icon256x256.png` (256 × 256 px). Okno nastavení ji má vloženou jako prostředek.
+`src/package/metadata/Icon256x256.png` (256 × 256 px). Exe okna nastavení a zástupce používají `design/icon.ico`,
+který z PNG vyrobí `pwsh tools/Convert-IconToIco.ps1`.
+
+## Screenshoty
+
+Screenshoty okna v `docs/screenshots/` se generují bez klikání. Okno se vykreslí s výchozím nastavením, nic neuloží a zavře se:
+
+```powershell
+build\settings\MxHapticsSettings.exe --screenshot docs\screenshots\nastaveni-dark.png --theme dark
+build\settings\MxHapticsSettings.exe --screenshot docs\screenshots\nastaveni-light.png --theme light
+```
 
 ## Licence
 

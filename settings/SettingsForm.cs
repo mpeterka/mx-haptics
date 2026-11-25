@@ -19,14 +19,19 @@ namespace MxHaptics.Settings
 
         private static readonly String[] StrengthLabels = { "Slabá", "Střední", "Silná" };
 
-        private readonly HapticsSettings _settings = HapticsSettings.Load();
+        private readonly HapticsSettings _settings;
+        private readonly Boolean _readOnly;
         private readonly CheckBox _masterSwitch;
         private readonly List<Control> _rowControls = new();
         private readonly Label _status;
         private Boolean _loading = true;
 
-        public SettingsForm()
+        /// <param name="readOnly">Pro screenshoty: výchozí nastavení, nic neukládá ani neposílá pluginu.</param>
+        public SettingsForm(Boolean readOnly = false)
         {
+            this._readOnly = readOnly;
+            this._settings = readOnly ? new HapticsSettings() : HapticsSettings.Load();
+
             this.Text = "MX Haptics – nastavení";
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -37,9 +42,12 @@ namespace MxHaptics.Settings
             this.Padding = new Padding(16);
 
             var iconImage = LoadIconImage();
-            if (iconImage != null)
+            using (var icoStream = typeof(SettingsForm).Assembly.GetManifestResourceStream("MxHaptics.Icon.ico"))
             {
-                this.Icon = Icon.FromHandle(new Bitmap(iconImage, 64, 64).GetHicon());
+                if (icoStream != null)
+                {
+                    this.Icon = new Icon(icoStream);
+                }
             }
 
             var root = new TableLayoutPanel { AutoSize = true, ColumnCount = 1, Dock = DockStyle.Fill };
@@ -140,8 +148,8 @@ namespace MxHaptics.Settings
 
             this.Controls.Add(root);
             this.UpdateEnabledState();
-            this.UpdateStatus(PluginClient.Send("reload") != null ? "Plugin běží." : null);
-            this._loading = false;
+            this.UpdateStatus(readOnly || PluginClient.Send("reload") != null ? "Plugin běží." : null);
+            this._loading = readOnly;
         }
 
         private static Image LoadIconImage()

@@ -11,6 +11,7 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ApplicationVisualStyles>true</ApplicationVisualStyles>
     <ApplicationDefaultFont>Segoe UI, 10pt</ApplicationDefaultFont>
+    <ApplicationIcon>..\design\icon.ico</ApplicationIcon>
     <!-- Barevný režim podle systému je ve WinForms experimentální API -->
     <NoWarn>$(NoWarn);WFO5001</NoWarn>
   </PropertyGroup>
@@ -18,6 +19,7 @@
   <ItemGroup>
     <Compile Include="..\shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\src\package\metadata\Icon256x256.png" LogicalName="MxHaptics.Icon.png" />
+    <EmbeddedResource Include="..\design\icon.ico" LogicalName="MxHaptics.Icon.ico" />
   </ItemGroup>
 
 </Project>
