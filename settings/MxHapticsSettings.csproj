@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <!-- Release balíček bez .pdb (obsahují lokální cesty) -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>disable</Nullable>

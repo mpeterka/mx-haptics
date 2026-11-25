@@ -12,6 +12,12 @@ Plugin pro Logi Options+ (Logi Actions SDK), který posílá hmatovou odezvu na 
 
 Jen Windows. Plugin běží uvnitř Logi Plugin Service, nastavení má samostatné okno.
 
+> Neoficiální projekt, není spojen s Logitech, Logitechem schválen ani podporován. Logitech, Logi, Logi Options+,
+> MX a MX Master jsou ochranné známky společnosti Logitech; v tomto projektu slouží jen k popisu, s čím plugin funguje.
+>
+> Unofficial project, not affiliated with, endorsed by, or supported by Logitech. Logitech, Logi, Logi Options+,
+> MX and MX Master are trademarks of Logitech; they are used here only to describe what the plugin works with.
+
 ## Instalace
 
 1. Potřeba je Logi Options+ a [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
@@ -92,7 +98,8 @@ Zvyš `version` v [`LoupedeckPackage.yaml`](src/package/metadata/LoupedeckPackag
 
 ```powershell
 dotnet tool install --global LogiPluginTool   # jednou
-dotnet build src/MxHapticsPlugin.csproj -c Release -p:SkipPluginLink=true
+Remove-Item build -Recurse -Force             # ať v balíčku nezůstanou .pdb z vývojového buildu
+dotnet build src/MxHapticsPlugin.csproj -c Release -p:SkipPluginLink=true   # Release je bez .pdb (DebugType=none v csproj)
 logiplugintool pack ./build ./MxHaptics_<verze>.lplug4
 logiplugintool verify ./MxHaptics_<verze>.lplug4
 gh release create v<verze> ./MxHaptics_<verze>.lplug4 --title "MX Haptics <verze>" --notes "…"

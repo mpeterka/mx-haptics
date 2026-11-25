@@ -51,6 +51,6 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 - Po změně vzhledu okna přegeneruj screenshoty: `build\settings\MxHapticsSettings.exe --screenshot docs\screenshots\nastaveni-<dark|light>.png --theme <dark|light>`.
   Tenhle režim kreslí výchozí nastavení a nic neukládá. Screenshoty okna nedělej snímáním obrazovky, uživatel s oknem může zrovna pracovat.
 - Release: postup v README („Vydání verze“), balíček `.lplug4` přes `logiplugintool pack` + `verify`, nahrát přes `gh release create`.
-  Release build pouštěj s `-p:SkipPluginLink=true`. GitHub Actions build neumí (chybí `PluginApi.dll`). Balíček na tomhle stroji
+  Release build pouštěj s `-p:SkipPluginLink=true` po smazání `build/`; Release konfigurace nevytváří `.pdb` (obsahují lokální cesty), nevracej to. GitHub Actions build neumí (chybí `PluginApi.dll`). Balíček na tomhle stroji
   neinstaluj, koliduje s vývojovým `MxHaptics.link`.
-- Repozitář je soukromý (`mpeterka/mx-haptics`), větev `main`. Do commitů, PR ani issues nepiš AI patičku.
+- Repozitář je veřejný (`mpeterka/mx-haptics`), větev `main`. Commity pod `martin.peterka@gmail.com` (firemní e-mail sem nepatří). Do commitů, PR ani issues nepiš AI patičku.

@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Release balíček bez .pdb (obsahují lokální cesty) -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
