@@ -19,6 +19,7 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 | `src/ToggleHapticsCommand.cs` | akce „Zapnout/vypnout MX Haptics“ (hlavní vypínač v JSON) |
 | `src/OpenSettingsCommand.cs` | akce „Nastavení MX Haptics“, spustí `build/settings/MxHapticsSettings.exe` |
 | `settings/` | okno nastavení (WinForms, `net10.0-windows`), ukládá JSON a posílá pluginu `reload`/`test` |
+| `settings/LogiControls.cs` | vzhled ve stylu Logi Options+: `Theme` (barvy pro tmavý/světlý režim), `ToggleSwitch`, `LogiRadio`, `LinkButton` |
 | `src/package/` | obsah balíčku: `metadata/` (LoupedeckPackage.yaml, ikona), `events/` (události a mapování na vibrace) |
 | `design/icon-source.png` | zdroj ikony (1254 × 1254 px, průhledné rohy) |
 | `design/icon.ico` | ikona exe a zástupce, generuje `tools/Convert-IconToIco.ps1` z `icon-source.png` |
@@ -58,6 +59,9 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 - Ikonu dodává uživatel. Nekresli vlastní ani ji neupravuj. `Icon256x256.png` je zmenšenina `design/icon-source.png` na 256 × 256 (bikubicky).
   Při nové ikoně nahraď obojí a pusť `pwsh tools/Convert-IconToIco.ps1`.
 - Po změně vzhledu okna přegeneruj screenshoty: `build\settings\MxHapticsSettings.exe --screenshot docs\screenshots\nastaveni-<dark|light>.png --theme <dark|light>`.
+- Okno nastavení napodobuje panel „Modify settings“ v Logi Options+: sekce oddělené čarou, nadpis + `ToggleSwitch` vpravo,
+  síla jako `LogiRadio`, „Vyzkoušet“ jako `LinkButton` (akcent, velká písmena). Barvy ber jen z `Theme.Current`, ne `SystemColors`.
+  `LinkButton` dědí z `Control`, ne z `Button`: ten si v tmavém režimu WinForms kreslí sám a vlastní `OnPaint` ignoruje.
   Tenhle režim kreslí výchozí nastavení a nic neukládá. Screenshoty okna nedělej snímáním obrazovky, uživatel s oknem může zrovna pracovat.
 - Release: postup v README („Vydání verze“), balíček `.lplug4` přes `logiplugintool pack` + `verify`, nahrát přes `gh release create`.
   Release build pouštěj s `-p:SkipPluginLink=true` po smazání `build/`; Release konfigurace nevytváří `.pdb` (obsahují lokální cesty), nevracej to. GitHub Actions build neumí (chybí `PluginApi.dll`). Balíček na tomhle stroji
