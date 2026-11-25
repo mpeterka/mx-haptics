@@ -30,6 +30,10 @@ namespace Loupedeck.MxHapticsPlugin
         public static extern Boolean GetCursorPos(out POINT point);
 
         [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern Boolean GetPhysicalCursorPos(out POINT point);
+
+        [DllImport("user32.dll")]
         public static extern IntPtr WindowFromPoint(POINT point);
 
         [DllImport("user32.dll")]

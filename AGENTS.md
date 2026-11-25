@@ -12,7 +12,8 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 | `src/MxHapticsPlugin.cs` | třída `Plugin`: start/stop sledování, načtení nastavení, výběr události podle síly, příkazy z roury |
 | `src/ControlPipeServer.cs` | pojmenovaná roura `MxHaptics` (`CurrentUserOnly`), příkazy `reload` a `test <reakce> <síla>` |
 | `src/MxHapticsApplication.cs` | prázdná `ClientApplication`. Loader ji vyžaduje, bez ní plugin skončí na „Cannot load plugin“ |
-| `src/PointerWatcher.cs` | detekce: vlákno oken a okrajů (10 ms), STA vlákno MSAA hit-testu tlačítek (30 ms) |
+| `src/PointerWatcher.cs` | detekce: vlákno oken a okrajů (10 ms), STA vlákno hit-testu tlačítek (30 ms) |
+| `src/TaskbarButtons.cs` | tlačítka hlavní lišty Win 11 přes UI Automation (COM, jen prefixy vtable), cache obdélníků na 1 s |
 | `src/Native.cs` | P/Invoke (user32, oleacc) a prefix rozhraní `IAccessible` |
 | `src/ToggleHapticsCommand.cs` | akce „Zapnout/vypnout MX Haptics“ (hlavní vypínač v JSON) |
 | `src/OpenSettingsCommand.cs` | akce „Nastavení MX Haptics“, spustí `build/settings/MxHapticsSettings.exe` |
@@ -45,7 +46,9 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 - Síla: `weak` = `subtle_collision`, `medium` = `damp_collision`, `strong` = `sharp_collision`. SDK nemá parametr síly, proto varianty událostí.
 - Povolené vzory vibrací: `sharp_state_change`, `damp_state_change`, `sharp_collision`, `damp_collision`, `subtle_collision`,
   `happy_alert`, `angry_alert`, `completed`, `square`, `wave`, `firework`, `mad`, `knock`, `jingle`, `ringing`.
-- Hit-test přes MSAA může v zaseknuté aplikaci blokovat. Proto běží ve vlastním vlákně odděleném od detekce oken; tohle oddělení zachovej.
+- Hit-test přes MSAA i UIA (lišta) může v zaseknuté aplikaci/Exploreru blokovat. Proto běží ve vlastním vlákně odděleném od detekce oken; tohle oddělení zachovej.
+- Hlavní lišta: MSAA ani UIA `ElementFromPoint` do XAML lišty nevidí, proto `FindAll` tlačítek + vlastní hit-test. UIA vrací fyzické
+  pixely, porovnávej s `GetPhysicalCursorPos`. Rozhraní v `TaskbarButtons.cs` jsou prefixy vtable z `UIAutomationClient.h`, pořadí nepřehazuj.
 - Ikonu dodává uživatel. Nekresli vlastní ani ji neupravuj. `Icon256x256.png` je zmenšenina `design/icon-source.png` na 256 × 256 (bikubicky).
   Při nové ikoně nahraď obojí a pusť `pwsh tools/Convert-IconToIco.ps1`.
 - Po změně vzhledu okna přegeneruj screenshoty: `build\settings\MxHapticsSettings.exe --screenshot docs\screenshots\nastaveni-<dark|light>.png --theme <dark|light>`.

@@ -9,7 +9,7 @@ namespace Loupedeck.MxHapticsPlugin
 
     /// <summary>
     /// Sleduje kurzor a hlásí události: přechod mezi okny, najetí na klikatelný prvek, náraz na okraj plochy.
-    /// Dvě vlákna: levné sledování oken/okrajů (10 ms) a pomalejší MSAA hit-test prvků (30 ms),
+    /// Dvě vlákna: levné sledování oken/okrajů (10 ms) a pomalejší hit-test prvků (30 ms; MSAA, na hlavní liště UIA),
     /// aby zaseknutá aplikace pod kurzorem nezdržela hranice oken.
     /// </summary>
     internal sealed class PointerWatcher : IDisposable
@@ -144,6 +144,7 @@ namespace Loupedeck.MxHapticsPlugin
             String lastKey = null;
             var lastPos = new POINT { X = Int32.MinValue };
             var lastControlEvent = Int64.MinValue / 2;
+            using var taskbar = new TaskbarButtons();
 
             while (!token.WaitHandle.WaitOne(ControlPollMs))
             {
@@ -163,7 +164,11 @@ namespace Loupedeck.MxHapticsPlugin
                         continue;
                     }
 
-                    var key = FindClickableKey(p);
+                    // hlavní lišta Windows 11 je pro MSAA jeden blok, tlačítka bere z UI Automation
+                    if (!taskbar.TryGetKey(p, this.Now, out var key))
+                    {
+                        key = FindClickableKey(p);
+                    }
                     if (key != null && key != lastKey && this.Now - lastControlEvent > ControlDebounceMs)
                     {
                         lastControlEvent = this.Now;
