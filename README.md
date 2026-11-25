@@ -49,7 +49,7 @@ Logy: `%LOCALAPPDATA%\Logi\LogiPluginService\Logs\plugin_logs\MxHaptics.log`.
 
 ## Ikona
 
-Generuje ji [`tools/Make-Icon.ps1`](tools/Make-Icon.ps1): `pwsh tools/Make-Icon.ps1`.
+Zdroj ve vysokém rozlišení je [`design/icon-source.png`](design/icon-source.png). Plugin používá jeho zmenšeninu `src/package/metadata/Icon256x256.png` (256 × 256 px).
 
 ## Licence
 
