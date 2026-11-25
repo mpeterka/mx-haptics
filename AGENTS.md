@@ -24,6 +24,7 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 | `design/icon-source.png` | zdroj ikony (1254 × 1254 px, průhledné rohy) |
 | `design/icon.ico` | ikona exe a zástupce, generuje `tools/Convert-IconToIco.ps1` z `icon-source.png` |
 | `tools/Install-StartMenuShortcut.ps1` | zástupce „MX Haptics Settings“ v nabídce Start (`-Remove` smaže; starého českého zástupce smaže vždy) |
+| `README.md`, `BUILDING.md`, `CONTRIBUTING.md` | dokumentace pro uživatele / sestavení a vydání / přispěvatele (anglicky); změnu chování promítni do všech, kterých se týká |
 | `docs/screenshots/` | screenshoty okna pro README (světlý a tmavý režim) (`settings-<dark|light>.png`) a `options-plus-haptics.png` z Options+ (dodal uživatel) |
 
 ## Sestavení a ladění
@@ -65,7 +66,7 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
   síla jako svislý seznam `LogiRadio` pod tučným „Vibration pattern“ (ne „Intensity“: sílu motoru řídí Options+) s „(Default)“ u výchozí, „Try it“ jako `LinkButton` (akcent, velká písmena). Barvy ber jen z `Theme.Current`, ne `SystemColors`.
   `LinkButton` dědí z `Control`, ne z `Button`: ten si v tmavém režimu WinForms kreslí sám a vlastní `OnPaint` ignoruje.
   Tenhle režim kreslí výchozí nastavení a nic neukládá. Screenshoty okna nedělej snímáním obrazovky, uživatel s oknem může zrovna pracovat.
-- Release: postup v README („Vydání verze“), balíček `.lplug4` přes `logiplugintool pack` + `verify`, nahrát přes `gh release create`.
+- Release: postup v BUILDING.md („Releasing“), balíček `.lplug4` přes `logiplugintool pack` + `verify`, nahrát přes `gh release create`.
   Release build pouštěj s `-p:SkipPluginLink=true` po smazání `build/`; Release konfigurace nevytváří `.pdb` (obsahují lokální cesty), nevracej to. GitHub Actions build neumí (chybí `PluginApi.dll`). Balíček na tomhle stroji
   neinstaluj, koliduje s vývojovým `MxHaptics.link`.
 - Repozitář je veřejný (`mpeterka/mx-haptics`), větev `main`. Commity pod `martin.peterka@gmail.com` (firemní e-mail sem nepatří). Do commitů, PR ani issues nepiš AI patičku.
