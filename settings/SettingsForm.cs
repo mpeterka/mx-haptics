@@ -27,7 +27,8 @@ namespace MxHaptics.Settings
             (Reactions.Click, "Click", "Left or right click on a button, link or taskbar icon."),
         };
 
-        private static readonly String[] StrengthLabels = { "Low", "Medium", "High" };
+        // vzory z eventMapping.yaml (subtle_collision, damp_collision, sharp_collision); sílu motoru řídí Options+
+        private static readonly String[] StrengthLabels = { "Subtle", "Damp", "Sharp" };
 
         private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
 
@@ -211,8 +212,8 @@ namespace MxHaptics.Settings
                 section.Controls.Add(this._taskbarToggle, 1, r++);
             }
 
-            // síla jako „Haptic intensity“ v Options+: tučný nadpis a svislý seznam s „(Default)“
-            var intensity = new Label { Text = "Intensity", AutoSize = true, Font = new Font(this.Font, FontStyle.Bold), Margin = new Padding(0, 16, 0, 6) };
+            // vzor jako „Haptic intensity“ v Options+: tučný nadpis a svislý seznam s „(Default)“
+            var intensity = new Label { Text = "Vibration pattern", AutoSize = true, Font = new Font(this.Font, FontStyle.Bold), Margin = new Padding(0, 16, 0, 6) };
             section.Controls.Add(intensity, 0, r++);
             var strengths = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.TopDown, WrapContents = false, Margin = Padding.Empty };
             for (var i = 0; i < StrengthLabels.Length; i++)
@@ -222,7 +223,7 @@ namespace MxHaptics.Settings
                 {
                     Text = strength == defaultStrength ? $"{StrengthLabels[i]} (Default)" : StrengthLabels[i],
                     Checked = rs.Strength == strength,
-                    AccessibleDescription = $"{title} intensity",
+                    AccessibleDescription = $"{title} vibration pattern",
                 };
                 radio.CheckedChanged += (_, _) =>
                 {

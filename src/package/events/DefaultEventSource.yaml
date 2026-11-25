@@ -1,38 +1,38 @@
-# Every reaction has three intensity variants; the plugin raises the one chosen in the settings window.
+# Every reaction has three pattern variants (subtle, damp, sharp); the plugin raises the one chosen in the settings window.
 events:
   - name: windowBorder_weak
-    displayName: Window border (low)
+    displayName: Window border (subtle)
     description: The pointer moved from one window to another
   - name: windowBorder_medium
-    displayName: Window border (medium)
+    displayName: Window border (damp)
     description: The pointer moved from one window to another
   - name: windowBorder_strong
-    displayName: Window border (high)
+    displayName: Window border (sharp)
     description: The pointer moved from one window to another
   - name: controlHover_weak
-    displayName: Button hover (low)
+    displayName: Button hover (subtle)
     description: The pointer entered a button, link, tab or menu item
   - name: controlHover_medium
-    displayName: Button hover (medium)
+    displayName: Button hover (damp)
     description: The pointer entered a button, link, tab or menu item
   - name: controlHover_strong
-    displayName: Button hover (high)
+    displayName: Button hover (sharp)
     description: The pointer entered a button, link, tab or menu item
   - name: screenEdge_weak
-    displayName: Screen edge (low)
+    displayName: Screen edge (subtle)
     description: The pointer hit the edge of the desktop
   - name: screenEdge_medium
-    displayName: Screen edge (medium)
+    displayName: Screen edge (damp)
     description: The pointer hit the edge of the desktop
   - name: screenEdge_strong
-    displayName: Screen edge (high)
+    displayName: Screen edge (sharp)
     description: The pointer hit the edge of the desktop
   - name: click_weak
-    displayName: Click (low)
+    displayName: Click (subtle)
     description: Left or right click on a button, link or taskbar icon
   - name: click_medium
-    displayName: Click (medium)
+    displayName: Click (damp)
     description: Left or right click on a button, link or taskbar icon
   - name: click_strong
-    displayName: Click (high)
+    displayName: Click (sharp)
     description: Left or right click on a button, link or taskbar icon

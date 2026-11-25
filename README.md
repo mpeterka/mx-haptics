@@ -4,12 +4,12 @@
 
 A Logi Options+ plugin (Logi Actions SDK) that gives the **MX Master 4** haptic feedback across Windows:
 
-| Reaction | When | Default intensity |
+| Reaction | When | Default pattern |
 | --- | --- | --- |
-| Window borders (`windowBorder`) | the pointer moves from one window to another | low |
-| Buttons and links (`controlHover`) | the pointer enters a button, link, tab or menu item (MSAA), or a Windows 11 taskbar button (UI Automation) | medium |
-| Screen edge (`screenEdge`) | the pointer hits the outer edge of the desktop (edges between monitors don't count) | medium |
-| Click (`click`) | left or right click on an element that *Buttons and links* reacts to (clicks into text or on the desktop don't vibrate) | medium |
+| Window borders (`windowBorder`) | the pointer moves from one window to another | subtle |
+| Buttons and links (`controlHover`) | the pointer enters a button, link, tab or menu item (MSAA), or a Windows 11 taskbar button (UI Automation) | damp |
+| Screen edge (`screenEdge`) | the pointer hits the outer edge of the desktop (edges between monitors don't count) | damp |
+| Click (`click`) | left or right click on an element that *Buttons and links* reacts to (clicks into text or on the desktop don't vibrate) | damp |
 
 Windows only. The plugin runs inside Logi Plugin Service; its settings live in a separate window.
 
@@ -55,8 +55,8 @@ Only one window runs at a time; starting it again brings the open window to the 
 - turn all haptics on or off (*Haptic feedback*),
 - turn each reaction on or off,
 - for *Buttons and links*, include or skip Windows taskbar buttons (*Include Windows taskbar buttons*),
-- pick the intensity of each reaction: low (`subtle_collision`), medium (`damp_collision`), high (`sharp_collision`);
-  picking one vibrates right away,
+- pick the vibration pattern of each reaction: *Subtle* (`subtle_collision`), *Damp* (`damp_collision`),
+  *Sharp* (`sharp_collision`); picking one vibrates right away,
 - feel a reaction with *Try it* (works even when the reaction is off).
 
 Each reaction shows how many vibrations it sent today and in total (*Try it* doesn't count). The window refreshes the numbers every 2 s.
@@ -66,13 +66,14 @@ Changes are saved instantly to `%LOCALAPPDATA%\MxHaptics\settings.json` and the 
 The window follows the Windows light or dark mode and is styled after the Logi Options+ settings panel. When the plugin isn't
 running, the footer says so in orange and the settings apply once it starts.
 
-### Why three intensities when Options+ has four
+### Vibration pattern vs. Haptic intensity
 
 *Haptic intensity* in Options+ (Subtle / Low / Medium / High) sets how strongly the mouse motor vibrates, for everything.
 The SDK doesn't let a plugin choose a strength, only which vibration pattern to play. So each reaction has three events
-(`windowBorder_weak`, `_medium`, `_strong`) mapped to patterns of increasing sharpness in
+(`windowBorder_weak`, `_medium`, `_strong`) mapped to the patterns *Subtle*, *Damp* and *Sharp* in
 [`eventMapping.yaml`](src/package/events/extra/eventMapping.yaml), and the plugin raises the one you picked.
-The Options+ intensity then scales all of them.
+The Options+ intensity then scales all of them. The event names and the `weak` / `medium` / `strong` values in
+`settings.json` are kept from earlier versions.
 
 ### Other controls
 
@@ -128,7 +129,7 @@ gh release create v<version> ./MxHaptics_<version>.lplug4 --title "MX Haptics <v
   found a clickable element under the pointer. The vibration arrives a little after the physical click (it travels through
   Logi Plugin Service to the mouse).
 - The settings window talks to the plugin over a local named pipe `MxHaptics` (current user only): `reload` after saving,
-  `test <reaction> <intensity>` for *Try it* and `stats` for the vibration counts.
+  `test <reaction> <weak|medium|strong>` for *Try it* and `stats` for the vibration counts.
 - The plugin keeps the counts in memory and saves them every minute (and on exit) to `%LOCALAPPDATA%\MxHaptics\stats.json`
   (in total and per day). When the plugin isn't running, the window reads that file.
 - Apps that don't expose accessibility information (some games, some Electron apps) won't vibrate on their buttons.

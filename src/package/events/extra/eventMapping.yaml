@@ -1,4 +1,4 @@
-# Intensity: weak = subtle_collision, medium = damp_collision, strong = sharp_collision
+# Pattern: weak = subtle_collision, medium = damp_collision, strong = sharp_collision (event names keep weak/medium/strong)
 haptics:
   windowBorder_weak:
     DEFAULT: subtle_collision
