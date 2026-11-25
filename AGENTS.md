@@ -21,7 +21,7 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 | `design/icon-source.png` | zdroj ikony (1254 × 1254 px, průhledné rohy) |
 | `design/icon.ico` | ikona exe a zástupce, generuje `tools/Convert-IconToIco.ps1` z `icon-source.png` |
 | `tools/Install-StartMenuShortcut.ps1` | zástupce „MX Haptics – nastavení“ v nabídce Start (`-Remove` smaže) |
-| `docs/screenshots/` | screenshoty okna pro README (světlý a tmavý režim) |
+| `docs/screenshots/` | screenshoty okna pro README (světlý a tmavý režim) a `options-haptika.png` z Options+ (dodal uživatel) |
 
 ## Sestavení a ladění
 

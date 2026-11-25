@@ -59,8 +59,11 @@ a nastavení se použije po jeho spuštění.
 
 ### Další ovládání
 
-- **Celý plugin:** Options+ → nastavení myši → *Enable haptic for app plugins* → MX Haptics.
-- **Celková síla vibrací myši:** nastavení haptiky myši v Options+ (platí pro všechno).
+- **Celý plugin:** Options+ → MX Master 4 → *Haptic feedback* → *Enable haptic for app plugins* → MX Haptics.
+  Když je přepínač vypnutý, myš nevibruje, ani když plugin běží.
+- **Celková síla vibrací myši:** *Haptic intensity* ve stejném panelu (platí pro všechno, nejen pro tenhle plugin).
+
+<img src="docs/screenshots/options-haptika.png" alt="Logi Options+: Haptic feedback, Haptic intensity a přepínač MX Haptics v Enable haptic for app plugins" width="720">
 - **Rychlé vypnutí:** akce *Zapnout/vypnout MX Haptics* přepíná hlavní vypínač.
 
 SDK neumí poslat vibraci se zvolenou silou. Proto má každá reakce tři události (`windowBorder_weak`, `_medium`, `_strong`)
