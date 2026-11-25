@@ -42,6 +42,9 @@ namespace Loupedeck.MxHapticsPlugin
         private readonly Func<Boolean> _taskbarEnabled;
         private Thread _controlThread;
 
+        // klikatelný prvek pod kurzorem (píše vlákno prvků, čte vlákno oken kvůli kliknutí); null = žádný
+        private volatile String _hoverKey;
+
         public PointerWatcher(Action<String> raise, Func<Boolean> taskbarEnabled)
         {
             this._raise = raise;
@@ -77,11 +80,21 @@ namespace Loupedeck.MxHapticsPlugin
             var wasAtEdge = false;
             var lastEdgeEvent = Int64.MinValue / 2;
             var lastPos = new POINT { X = Int32.MinValue };
+            var wasDown = false;
 
             while (!token.WaitHandle.WaitOne(WindowPollMs))
             {
                 try
                 {
+                    // --- kliknutí na prvek (stisk levého/pravého tlačítka); tady kvůli 10ms vzorkování ---
+                    var down = Native.IsButtonDown();
+                    if (down && !wasDown && this._hoverKey != null)
+                    {
+                        this._raise(Reactions.Click);
+                    }
+
+                    wasDown = down;
+
                     if (!Native.GetCursorPos(out var p))
                     {
                         continue;
@@ -166,6 +179,7 @@ namespace Loupedeck.MxHapticsPlugin
                     if (Native.IsButtonDown())
                     {
                         lastKey = null;
+                        this._hoverKey = null;
                         continue;
                     }
 
@@ -175,6 +189,8 @@ namespace Loupedeck.MxHapticsPlugin
                     {
                         key = FindClickableKey(p);
                     }
+
+                    this._hoverKey = key;
                     if (key != null && key != lastKey && this.Now - lastControlEvent > ControlDebounceMs)
                     {
                         lastControlEvent = this.Now;

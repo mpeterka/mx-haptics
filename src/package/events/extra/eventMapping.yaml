@@ -18,3 +18,9 @@ haptics:
     DEFAULT: damp_collision
   screenEdge_strong:
     DEFAULT: sharp_collision
+  click_weak:
+    DEFAULT: subtle_collision
+  click_medium:
+    DEFAULT: damp_collision
+  click_strong:
+    DEFAULT: sharp_collision

@@ -18,8 +18,9 @@ namespace MxHaptics.Shared
         public const String WindowBorder = "windowBorder";
         public const String ControlHover = "controlHover";
         public const String ScreenEdge = "screenEdge";
+        public const String Click = "click";
 
-        public static readonly String[] All = { WindowBorder, ControlHover, ScreenEdge };
+        public static readonly String[] All = { WindowBorder, ControlHover, ScreenEdge, Click };
 
         /// <summary>Název haptické události pro reakci a sílu, např. <c>windowBorder_weak</c>.</summary>
         public static String EventName(String reaction, Strength strength) =>
@@ -55,6 +56,8 @@ namespace MxHaptics.Shared
 
         public ReactionSettings ScreenEdge { get; set; } = new() { Strength = Strength.Medium };
 
+        public ReactionSettings Click { get; set; } = new() { Strength = Strength.Medium };
+
         /// <summary>Reakce <see cref="Reactions.ControlHover"/> i na tlačítkách hlavní lišty Windows (UI Automation).</summary>
         public Boolean TaskbarButtons { get; set; } = true;
 
@@ -68,6 +71,7 @@ namespace MxHaptics.Shared
             Reactions.WindowBorder => this.WindowBorder ??= new ReactionSettings(),
             Reactions.ControlHover => this.ControlHover ??= new ReactionSettings(),
             Reactions.ScreenEdge => this.ScreenEdge ??= new ReactionSettings(),
+            Reactions.Click => this.Click ??= new ReactionSettings(),
             _ => throw new ArgumentOutOfRangeException(nameof(reaction), reaction, "Neznámá reakce"),
         };
 

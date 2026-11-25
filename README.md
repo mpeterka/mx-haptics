@@ -9,6 +9,7 @@ Plugin pro Logi Options+ (Logi Actions SDK), který posílá hmatovou odezvu na 
 | Hranice okna (`windowBorder`) | kurzor přejede z jednoho okna do jiného | slabá |
 | Tlačítka a odkazy (`controlHover`) | najetí na tlačítko, odkaz, záložku, položku menu (MSAA), tlačítka hlavní lišty Windows 11 (UI Automation) | střední |
 | Okraj obrazovky (`screenEdge`) | náraz na vnější okraj plochy (vnitřní hrany monitorů se nepočítají) | střední |
+| Kliknutí (`click`) | stisk levého nebo pravého tlačítka myši na prvku, na který reaguje „Tlačítka a odkazy“ (klik do textu nebo na plochu ne) | střední |
 
 Jen Windows. Plugin běží uvnitř Logi Plugin Service, nastavení má samostatné okno.
 
@@ -116,6 +117,8 @@ gh release create v<verze> ./MxHaptics_<verze>.lplug4 --title "MX Haptics <verze
 - Hlavní lišta Windows 11 je pro MSAA jeden blok bez tlačítek. Když je kurzor nad lištou (`Shell_TrayWnd`, na dalších monitorech
   `Shell_SecondaryTrayWnd`), plugin si přes UI Automation načte obdélníky jejích tlačítek (aplikace, Start, ikony v oznamovací
   oblasti, hodiny …), drží je sekundu v cache a kurzor s nimi porovnává sám.
+- Kliknutí: vlákno oken každých 10 ms čte stav levého a pravého tlačítka. Při stisku vibruje, pokud vlákno prvků naposledy
+  našlo pod kurzorem klikatelný prvek. Vibrace přijde až po fyzickém cvaknutí (cesta přes Logi Plugin Service do myši).
 - Okno nastavení posílá pluginu příkazy přes lokální pojmenovanou rouru `MxHaptics` (jen pro aktuálního uživatele):
   `reload` po uložení a `test <reakce> <síla>` pro tlačítko *Vyzkoušet*.
 - Aplikace, které neposkytují accessibility (některé hry, část Electron aplikací), na tlačítkách vibrovat nebudou.

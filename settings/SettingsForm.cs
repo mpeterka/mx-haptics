@@ -15,6 +15,7 @@ namespace MxHaptics.Settings
             (Reactions.WindowBorder, "Hranice okna", "Kurzor přejede z jednoho okna do jiného"),
             (Reactions.ControlHover, "Tlačítka a odkazy", "Najetí na tlačítko, odkaz, záložku nebo položku menu"),
             (Reactions.ScreenEdge, "Okraj obrazovky", "Náraz na vnější okraj plochy"),
+            (Reactions.Click, "Kliknutí", "Levé nebo pravé tlačítko myši na tlačítku, odkazu nebo ikoně na liště"),
         };
 
         private static readonly String[] StrengthLabels = { "Slabá", "Střední", "Silná" };

@@ -33,7 +33,7 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
   `%LOCALAPPDATA%\Logi\LogiPluginService\Plugins\MxHaptics.link` a přes `loupedeck:plugin/MxHaptics/reload` plugin znovu načte.
   `-p:SkipPluginLink=true` zápis `.link` a reload vynechá.
 - Ověření načtení: `%LOCALAPPDATA%\Logi\LogiPluginService\Logs\plugin_logs\MxHaptics.log` má obsahovat
-  „Plugin 'MxHaptics' … loaded“ a „Event source added … with 9 events“. Chyby jsou i v `_errors.log`.
+  „Plugin 'MxHaptics' … loaded“ a „Event source added … with 12 events“. Chyby jsou i v `_errors.log`.
 - Vibrace samotné ověřit nejde, poznat je může jen uživatel s myší v ruce. Neříkej, že haptika funguje, když jsi ji necítil.
 - Nehýbej uživateli kurzorem kvůli testu. Rouru jde ověřit příkazem `reload` (odpověď `ok`); `test` uživateli zavibruje myší.
 
@@ -41,7 +41,7 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 
 - Události jsou definované jen v `src/package/events/DefaultEventSource.yaml`. Nevolej k nim navíc `PluginEvents.AddEvent`,
   jinak se zaregistrují dvakrát (log pak hlásí dvojnásobek událostí).
-- Události mají tvar `<reakce>_<síla>` (`windowBorder_weak` …, viz `Reactions.EventName`). Všech 9 kombinací musí být
+- Události mají tvar `<reakce>_<síla>` (`windowBorder_weak` …, viz `Reactions.EventName`). Všech 12 kombinací musí být
   v `DefaultEventSource.yaml` i v `eventMapping.yaml`. Novou reakci přidej do `Reactions`, `HapticsSettings`, obou YAML a do řádků okna.
 - Síla: `weak` = `subtle_collision`, `medium` = `damp_collision`, `strong` = `sharp_collision`. SDK nemá parametr síly, proto varianty událostí.
 - Povolené vzory vibrací: `sharp_state_change`, `damp_state_change`, `sharp_collision`, `damp_collision`, `subtle_collision`,
@@ -50,6 +50,8 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 - Hlavní lišta: MSAA ani UIA `ElementFromPoint` do XAML lišty nevidí, proto `FindAll` tlačítek + vlastní hit-test. UIA vrací fyzické
   pixely, porovnávej s `GetPhysicalCursorPos`. Rozhraní v `TaskbarButtons.cs` jsou prefixy vtable z `UIAutomationClient.h`, pořadí nepřehazuj.
 - Lišta jde vypnout volbou `taskbarButtons` v JSON (výchozí `true`, v okně pod řádkem „Tlačítka a odkazy“). Plugin ji čte při každém vzorku přes delegát z `MxHapticsPlugin`.
+- Kliknutí (`click`) hlásí vlákno oken (10 ms, hrana stisku L/P tlačítka), ale jen když `_hoverKey` (píše vlákno prvků) není null.
+  Vlákno oken tím dál nevolá MSAA ani UIA, jen čte volatile pole.
 - Ikonu dodává uživatel. Nekresli vlastní ani ji neupravuj. `Icon256x256.png` je zmenšenina `design/icon-source.png` na 256 × 256 (bikubicky).
   Při nové ikoně nahraď obojí a pusť `pwsh tools/Convert-IconToIco.ps1`.
 - Po změně vzhledu okna přegeneruj screenshoty: `build\settings\MxHapticsSettings.exe --screenshot docs\screenshots\nastaveni-<dark|light>.png --theme <dark|light>`.

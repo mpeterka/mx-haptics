@@ -27,3 +27,12 @@ events:
   - name: screenEdge_strong
     displayName: Okraj obrazovky (silná)
     description: Kurzor narazil na okraj plochy
+  - name: click_weak
+    displayName: Kliknutí (slabá)
+    description: Kliknutí levým nebo pravým tlačítkem na tlačítko, odkaz nebo ikonu na liště
+  - name: click_medium
+    displayName: Kliknutí (střední)
+    description: Kliknutí levým nebo pravým tlačítkem na tlačítko, odkaz nebo ikonu na liště
+  - name: click_strong
+    displayName: Kliknutí (silná)
+    description: Kliknutí levým nebo pravým tlačítkem na tlačítko, odkaz nebo ikonu na liště
