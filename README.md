@@ -60,6 +60,8 @@ V okně můžeš:
 - zvolit sílu reakce: slabá (`subtle_collision`), střední (`damp_collision`), silná (`sharp_collision`),
 - tlačítkem *Vyzkoušet* si vibraci hned ohmatat (funguje i u vypnuté reakce).
 
+Vpravo u každé reakce je počet vibrací dnes a celkem (*Vyzkoušet* se nepočítá). Okno ho obnovuje každé 2 s.
+
 Změny se ukládají hned do `%LOCALAPPDATA%\MxHaptics\settings.json` a plugin je načte bez restartu.
 
 Okno se řídí světlým nebo tmavým režimem Windows. Když plugin neběží, napíše to oranžově ve spodní liště
@@ -120,7 +122,9 @@ gh release create v<verze> ./MxHaptics_<verze>.lplug4 --title "MX Haptics <verze
 - Kliknutí: vlákno oken každých 10 ms čte stav levého a pravého tlačítka. Při stisku vibruje, pokud vlákno prvků naposledy
   našlo pod kurzorem klikatelný prvek. Vibrace přijde až po fyzickém cvaknutí (cesta přes Logi Plugin Service do myši).
 - Okno nastavení posílá pluginu příkazy přes lokální pojmenovanou rouru `MxHaptics` (jen pro aktuálního uživatele):
-  `reload` po uložení a `test <reakce> <síla>` pro tlačítko *Vyzkoušet*.
+  `reload` po uložení, `test <reakce> <síla>` pro tlačítko *Vyzkoušet* a `stats` pro počty vibrací.
+- Počty vibrací drží plugin v paměti a jednou za minutu (a při ukončení) je ukládá do `%LOCALAPPDATA%\MxHaptics\stats.json`
+  (celkem a po dnech). Když plugin neběží, okno čte tento soubor.
 - Aplikace, které neposkytují accessibility (některé hry, část Electron aplikací), na tlačítkách vibrovat nebudou.
 
 ## Ikona

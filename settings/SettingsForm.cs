@@ -3,7 +3,9 @@ namespace MxHaptics.Settings
     using System;
     using System.Collections.Generic;
     using System.Drawing;
+    using System.Globalization;
     using System.IO;
+    using System.Threading.Tasks;
     using System.Windows.Forms;
 
     using MxHaptics.Shared;
@@ -26,7 +28,10 @@ namespace MxHaptics.Settings
         private readonly CheckBox _taskbarCheck;
         private readonly List<Control> _rowControls = new();
         private readonly Label _status;
+        private readonly Dictionary<String, Label> _countLabels = new();
+        private readonly Label _statsSince;
         private Boolean _loading = true;
+        private Boolean _refreshingStats;
 
         /// <param name="readOnly">Pro screenshoty: výchozí nastavení, nic neukládá ani neposílá pluginu.</param>
         public SettingsForm(Boolean readOnly = false)
@@ -91,7 +96,8 @@ namespace MxHaptics.Settings
             root.Controls.Add(this._masterSwitch);
 
             // --- reakce ---
-            var grid = new TableLayoutPanel { AutoSize = true, ColumnCount = 3, Margin = new Padding(0, 0, 0, 8) };
+            var grid = new TableLayoutPanel { AutoSize = true, ColumnCount = 4, Margin = new Padding(0, 0, 0, 8) };
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -146,12 +152,28 @@ namespace MxHaptics.Settings
                 grid.Controls.Add(cell);
                 grid.Controls.Add(strength);
                 grid.Controls.Add(test);
+
+                var count = new Label
+                {
+                    AutoSize = true,
+                    MinimumSize = new Size(110, 0),
+                    TextAlign = ContentAlignment.TopRight,
+                    ForeColor = SystemColors.GrayText,
+                    Anchor = AnchorStyles.Right,
+                    Margin = new Padding(16, 6, 0, 0),
+                };
+                grid.Controls.Add(count);
+                this._countLabels[reaction] = count;
+
                 this._rowControls.Add(enabled);
                 this._rowControls.Add(strength);
                 this._rowControls.Add(test);
             }
 
             root.Controls.Add(grid);
+
+            this._statsSince = new Label { AutoSize = true, ForeColor = SystemColors.GrayText, Anchor = AnchorStyles.Right, Margin = new Padding(0, 0, 0, 8) };
+            root.Controls.Add(this._statsSince);
 
             // --- patička ---
             var footer = new TableLayoutPanel { AutoSize = true, ColumnCount = 2, Dock = DockStyle.Fill };
@@ -169,6 +191,59 @@ namespace MxHaptics.Settings
             this.UpdateEnabledState();
             this.UpdateStatus(readOnly || PluginClient.Send("reload") != null ? "Plugin běží." : null);
             this._loading = readOnly;
+
+            if (readOnly)
+            {
+                this.ShowStats(new HapticsStats());
+            }
+            else
+            {
+                this.RefreshStats();
+                var timer = new Timer { Interval = 2000 };
+                timer.Tick += (_, _) => this.RefreshStats();
+                timer.Start();
+                this.FormClosed += (_, _) => timer.Dispose();
+            }
+        }
+
+        /// <summary>Počty z běžícího pluginu (aktuální), jinak z uloženého souboru (plugin ukládá jednou za minutu).</summary>
+        private async void RefreshStats()
+        {
+            if (this._refreshingStats)
+            {
+                return;
+            }
+
+            this._refreshingStats = true;
+            try
+            {
+                var stats = await Task.Run(() =>
+                {
+                    var json = PluginClient.Send("stats");
+                    return json != null && json.StartsWith('{') ? HapticsStats.FromJson(json) : HapticsStats.Load();
+                });
+                if (!this.IsDisposed)
+                {
+                    this.ShowStats(stats);
+                }
+            }
+            finally
+            {
+                this._refreshingStats = false;
+            }
+        }
+
+        private void ShowStats(HapticsStats stats)
+        {
+            var today = DateTime.Now;
+            foreach (var (reaction, label) in this._countLabels)
+            {
+                label.Text = $"dnes {stats.DayOf(reaction, today):N0}\ncelkem {stats.TotalOf(reaction):N0}";
+            }
+
+            this._statsSince.Text = DateTime.TryParseExact(stats.Since, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var since)
+                ? $"Počty vibrací od {since:d}"
+                : "Počty vibrací: zatím žádné";
         }
 
         private static Image LoadIconImage()

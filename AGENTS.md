@@ -10,7 +10,8 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 | --- | --- |
 | `shared/HapticsSettings.cs` | model nastavení (JSON v `%LOCALAPPDATA%\MxHaptics\settings.json`), názvy reakcí a událostí; sdílí ho plugin i okno |
 | `src/MxHapticsPlugin.cs` | třída `Plugin`: start/stop sledování, načtení nastavení, výběr události podle síly, příkazy z roury |
-| `src/ControlPipeServer.cs` | pojmenovaná roura `MxHaptics` (`CurrentUserOnly`), příkazy `reload` a `test <reakce> <síla>` |
+| `shared/HapticsStats.cs` | počty odeslaných vibrací (celkem a po dnech) v `%LOCALAPPDATA%\MxHaptics\stats.json`; zapisuje jen plugin |
+| `src/ControlPipeServer.cs` | pojmenovaná roura `MxHaptics` (`CurrentUserOnly`), příkazy `reload`, `stats` a `test <reakce> <síla>` |
 | `src/MxHapticsApplication.cs` | prázdná `ClientApplication`. Loader ji vyžaduje, bez ní plugin skončí na „Cannot load plugin“ |
 | `src/PointerWatcher.cs` | detekce: vlákno oken a okrajů (10 ms), STA vlákno hit-testu tlačítek (30 ms) |
 | `src/TaskbarButtons.cs` | tlačítka hlavní lišty Win 11 přes UI Automation (COM, jen prefixy vtable), cache obdélníků na 1 s |
@@ -50,6 +51,8 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 - Hlavní lišta: MSAA ani UIA `ElementFromPoint` do XAML lišty nevidí, proto `FindAll` tlačítek + vlastní hit-test. UIA vrací fyzické
   pixely, porovnávej s `GetPhysicalCursorPos`. Rozhraní v `TaskbarButtons.cs` jsou prefixy vtable z `UIAutomationClient.h`, pořadí nepřehazuj.
 - Lišta jde vypnout volbou `taskbarButtons` v JSON (výchozí `true`, v okně pod řádkem „Tlačítka a odkazy“). Plugin ji čte při každém vzorku přes delegát z `MxHapticsPlugin`.
+- Statistika: počítá se v `RaiseReaction` až po kontrole vypínačů (test z okna ne), pod `_statsLock`. Plugin ukládá `stats.json`
+  jednou za minutu a v `Unload`; okno čte přes `stats` z roury (na pozadí, `Task.Run`), jinak ze souboru. Okno do souboru nepíše.
 - Kliknutí (`click`) hlásí vlákno oken (10 ms, hrana stisku L/P tlačítka), ale jen když `_hoverKey` (píše vlákno prvků) není null.
   Vlákno oken tím dál nevolá MSAA ani UIA, jen čte volatile pole.
 - Ikonu dodává uživatel. Nekresli vlastní ani ji neupravuj. `Icon256x256.png` je zmenšenina `design/icon-source.png` na 256 × 256 (bikubicky).
