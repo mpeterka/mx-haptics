@@ -1,7 +1,20 @@
+# Síla: weak = subtle_collision, medium = damp_collision, strong = sharp_collision
 haptics:
-  windowBorder:
+  windowBorder_weak:
     DEFAULT: subtle_collision
-  controlHover:
-    DEFAULT: sharp_state_change
-  screenEdge:
+  windowBorder_medium:
     DEFAULT: damp_collision
+  windowBorder_strong:
+    DEFAULT: sharp_collision
+  controlHover_weak:
+    DEFAULT: subtle_collision
+  controlHover_medium:
+    DEFAULT: damp_collision
+  controlHover_strong:
+    DEFAULT: sharp_collision
+  screenEdge_weak:
+    DEFAULT: subtle_collision
+  screenEdge_medium:
+    DEFAULT: damp_collision
+  screenEdge_strong:
+    DEFAULT: sharp_collision

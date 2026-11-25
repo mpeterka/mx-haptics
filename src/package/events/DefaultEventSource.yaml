@@ -1,10 +1,29 @@
+# Každá reakce má tři varianty síly; plugin posílá tu, kterou uživatel zvolil v okně nastavení.
 events:
-  - name: windowBorder
-    displayName: Hranice okna
+  - name: windowBorder_weak
+    displayName: Hranice okna (slabá)
     description: Kurzor přejel z jednoho okna do jiného
-  - name: controlHover
-    displayName: Najetí na tlačítko
+  - name: windowBorder_medium
+    displayName: Hranice okna (střední)
+    description: Kurzor přejel z jednoho okna do jiného
+  - name: windowBorder_strong
+    displayName: Hranice okna (silná)
+    description: Kurzor přejel z jednoho okna do jiného
+  - name: controlHover_weak
+    displayName: Najetí na tlačítko (slabá)
     description: Kurzor najel na tlačítko, odkaz, záložku nebo položku menu
-  - name: screenEdge
-    displayName: Okraj obrazovky
+  - name: controlHover_medium
+    displayName: Najetí na tlačítko (střední)
+    description: Kurzor najel na tlačítko, odkaz, záložku nebo položku menu
+  - name: controlHover_strong
+    displayName: Najetí na tlačítko (silná)
+    description: Kurzor najel na tlačítko, odkaz, záložku nebo položku menu
+  - name: screenEdge_weak
+    displayName: Okraj obrazovky (slabá)
+    description: Kurzor narazil na okraj plochy
+  - name: screenEdge_medium
+    displayName: Okraj obrazovky (střední)
+    description: Kurzor narazil na okraj plochy
+  - name: screenEdge_strong
+    displayName: Okraj obrazovky (silná)
     description: Kurzor narazil na okraj plochy

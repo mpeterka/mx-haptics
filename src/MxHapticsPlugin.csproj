@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
     <PackageFiles Include="package\**\*" />
   </ItemGroup>
 
@@ -32,8 +33,13 @@
     <Copy SourceFiles="@(PackageFiles)" DestinationFolder="$(PluginRootDir)%(RecursiveDir)" SkipUnchangedFiles="true" />
   </Target>
 
+  <!-- Okno nastavení (WinForms, net10.0-windows) do build/settings/ -->
+  <Target Name="BuildSettingsApp" AfterTargets="CopyPackage" Condition="'$(SkipSettingsApp)' != 'true'">
+    <Exec Command="dotnet build &quot;$(MSBuildThisFileDirectory)..\settings\MxHapticsSettings.csproj&quot; -c $(Configuration) -o &quot;$(PluginRootDir)settings&quot; --nologo -v q" />
+  </Target>
+
   <!-- Vývojový .link soubor: Logi Plugin Service načte plugin přímo z build/ -->
-  <Target Name="WriteLink" AfterTargets="CopyPackage" Condition="'$(OS)' == 'Windows_NT' And '$(SkipPluginLink)' != 'true'">
+  <Target Name="WriteLink" AfterTargets="BuildSettingsApp" Condition="'$(OS)' == 'Windows_NT' And '$(SkipPluginLink)' != 'true'">
     <WriteLinesToFile File="$(PluginLinkFile)" Lines="$(PluginRootDir)" Overwrite="true" />
     <Exec Command="start loupedeck:plugin/MxHaptics/reload" ContinueOnError="true" />
   </Target>

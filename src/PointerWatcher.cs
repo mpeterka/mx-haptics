@@ -5,6 +5,8 @@ namespace Loupedeck.MxHapticsPlugin
     using System.Runtime.InteropServices;
     using System.Threading;
 
+    using MxHaptics.Shared;
+
     /// <summary>
     /// Sleduje kurzor a hlásí události: přechod mezi okny, najetí na klikatelný prvek, náraz na okraj plochy.
     /// Dvě vlákna: levné sledování oken/okrajů (10 ms) a pomalejší MSAA hit-test prvků (30 ms),
@@ -88,7 +90,7 @@ namespace Loupedeck.MxHapticsPlugin
                     if (atEdge && !wasAtEdge && this.Now - lastEdgeEvent > EdgeDebounceMs)
                     {
                         lastEdgeEvent = this.Now;
-                        this._raise(MxHapticsPlugin.ScreenEdge);
+                        this._raise(Reactions.ScreenEdge);
                     }
 
                     wasAtEdge = atEdge;
@@ -126,7 +128,7 @@ namespace Loupedeck.MxHapticsPlugin
                     if (hadPrevious && !IsIgnoredWindow(root) && this.Now - lastWindowEvent > WindowDebounceMs)
                     {
                         lastWindowEvent = this.Now;
-                        this._raise(MxHapticsPlugin.WindowBorder);
+                        this._raise(Reactions.WindowBorder);
                     }
                 }
                 catch (Exception ex)
@@ -165,7 +167,7 @@ namespace Loupedeck.MxHapticsPlugin
                     if (key != null && key != lastKey && this.Now - lastControlEvent > ControlDebounceMs)
                     {
                         lastControlEvent = this.Now;
-                        this._raise(MxHapticsPlugin.ControlHover);
+                        this._raise(Reactions.ControlHover);
                     }
 
                     lastKey = key;
