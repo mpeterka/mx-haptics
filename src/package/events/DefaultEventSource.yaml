@@ -1,0 +1,10 @@
+events:
+  - name: windowBorder
+    displayName: Hranice okna
+    description: Kurzor přejel z jednoho okna do jiného
+  - name: controlHover
+    displayName: Najetí na tlačítko
+    description: Kurzor najel na tlačítko, odkaz, záložku nebo položku menu
+  - name: screenEdge
+    displayName: Okraj obrazovky
+    description: Kurzor narazil na okraj plochy

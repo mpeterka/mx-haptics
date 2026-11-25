@@ -1,0 +1,7 @@
+haptics:
+  windowBorder:
+    DEFAULT: subtle_collision
+  controlHover:
+    DEFAULT: sharp_state_change
+  screenEdge:
+    DEFAULT: damp_collision

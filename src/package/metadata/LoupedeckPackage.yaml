@@ -1,0 +1,19 @@
+type: plugin4
+name: MxHaptics
+displayName: MX Haptics
+description: Hmatová odezva myši MX Master 4 při přejetí hranice okna, tlačítka nebo okraje obrazovky.
+pluginFileName: MxHapticsPlugin.dll
+version: 0.1.0
+author: mpeterka
+copyright: Copyright (c) 2026 mpeterka
+
+pluginFolderWin: win
+
+supportedDevices:
+    - LoupedeckCtFamily
+
+pluginCapabilities:
+    - HasHapticMapping
+
+minimumLoupedeckVersion: 6.4
+license: MIT

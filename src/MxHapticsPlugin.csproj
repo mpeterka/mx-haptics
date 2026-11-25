@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>Loupedeck.MxHapticsPlugin</RootNamespace>
+    <AssemblyName>MxHapticsPlugin</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <PluginApiDir Condition="'$(PluginApiDir)' == ''">C:\Program Files\Logi\LogiPluginService\</PluginApiDir>
+    <!-- Kořen pluginu (metadata/, events/, win/) -->
+    <PluginRootDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\build\'))</PluginRootDir>
+    <OutputPath>$(PluginRootDir)win\</OutputPath>
+    <PluginLinkFile>$(LOCALAPPDATA)\Logi\LogiPluginService\Plugins\MxHaptics.link</PluginLinkFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="PluginApi">
+      <HintPath>$(PluginApiDir)PluginApi.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageFiles Include="package\**\*" />
+  </ItemGroup>
+
+  <Target Name="CopyPackage" AfterTargets="Build">
+    <Copy SourceFiles="@(PackageFiles)" DestinationFolder="$(PluginRootDir)%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Vývojový .link soubor: Logi Plugin Service načte plugin přímo z build/ -->
+  <Target Name="WriteLink" AfterTargets="CopyPackage" Condition="'$(OS)' == 'Windows_NT' And '$(SkipPluginLink)' != 'true'">
+    <WriteLinesToFile File="$(PluginLinkFile)" Lines="$(PluginRootDir)" Overwrite="true" />
+    <Exec Command="start loupedeck:plugin/MxHaptics/reload" ContinueOnError="true" />
+  </Target>
+
+</Project>
