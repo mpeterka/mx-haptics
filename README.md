@@ -12,6 +12,19 @@ Plugin pro Logi Options+ (Logi Actions SDK), který posílá hmatovou odezvu na 
 
 Jen Windows. Plugin běží uvnitř Logi Plugin Service, nastavení má samostatné okno.
 
+## Instalace
+
+1. Potřeba je Logi Options+ a [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
+   (`winget install Microsoft.DotNet.DesktopRuntime.10`).
+2. Z [Releases](https://github.com/mpeterka/mx-haptics/releases) stáhni `MxHaptics_<verze>.lplug4` a dvakrát na něj klikni.
+   Logi Plugin Service se zeptá na instalaci a plugin nainstaluje do `%LOCALAPPDATA%\Logi\LogiPluginService\Plugins\MxHaptics`.
+3. Zástupce okna nastavení do nabídky Start (volitelné):
+   `pwsh tools/Install-StartMenuShortcut.ps1 -Target "$env:LOCALAPPDATA\Logi\LogiPluginService\Plugins\MxHaptics\settings\MxHapticsSettings.exe"`
+
+Balíček se nekombinuje s vývojovou instalací z [Sestavení](#sestavení): před instalací `.lplug4` smaž `MxHaptics.link`.
+Release se sestavuje ručně (viz [Vydání verze](#vydání-verze)), GitHub Actions to neumí: build potřebuje `PluginApi.dll`
+z nainstalovaného Logi Options+, který na runneru není.
+
 ## Nastavení
 
 <picture>
@@ -69,6 +82,18 @@ Pokud se plugin neobjeví, dej v nastavení Options+ *Restart Logi Plugin Servic
 Logy: `%LOCALAPPDATA%\Logi\LogiPluginService\Logs\plugin_logs\MxHaptics.log`.
 
 **Odinstalace:** smazat `MxHaptics.link`, restartovat Logi Plugin Service a případně smazat `%LOCALAPPDATA%\MxHaptics`.
+
+### Vydání verze
+
+Zvyš `version` v [`LoupedeckPackage.yaml`](src/package/metadata/LoupedeckPackage.yaml), pak:
+
+```powershell
+dotnet tool install --global LogiPluginTool   # jednou
+dotnet build src/MxHapticsPlugin.csproj -c Release -p:SkipPluginLink=true
+logiplugintool pack ./build ./MxHaptics_<verze>.lplug4
+logiplugintool verify ./MxHaptics_<verze>.lplug4
+gh release create v<verze> ./MxHaptics_<verze>.lplug4 --title "MX Haptics <verze>" --notes "…"
+```
 
 ## Jak to funguje
 
