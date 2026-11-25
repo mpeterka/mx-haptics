@@ -1,7 +1,7 @@
 type: plugin4
 name: MxHaptics
 displayName: MX Haptics
-description: Hmatová odezva myši MX Master 4 při přejetí hranice okna, tlačítka nebo okraje obrazovky.
+description: Haptic feedback on the MX Master 4 when the pointer crosses a window border, enters a button or link, hits the screen edge, or clicks a control.
 pluginFileName: MxHapticsPlugin.dll
 version: 0.5.0
 author: mpeterka

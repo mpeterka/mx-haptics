@@ -1,4 +1,4 @@
-# Síla: weak = subtle_collision, medium = damp_collision, strong = sharp_collision
+# Intensity: weak = subtle_collision, medium = damp_collision, strong = sharp_collision
 haptics:
   windowBorder_weak:
     DEFAULT: subtle_collision

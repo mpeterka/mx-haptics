@@ -16,15 +16,15 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 | `src/PointerWatcher.cs` | detekce: vlákno oken a okrajů (10 ms), STA vlákno hit-testu tlačítek (30 ms) |
 | `src/TaskbarButtons.cs` | tlačítka hlavní lišty Win 11 přes UI Automation (COM, jen prefixy vtable), cache obdélníků na 1 s |
 | `src/Native.cs` | P/Invoke (user32, oleacc) a prefix rozhraní `IAccessible` |
-| `src/ToggleHapticsCommand.cs` | akce „Zapnout/vypnout MX Haptics“ (hlavní vypínač v JSON) |
-| `src/OpenSettingsCommand.cs` | akce „Nastavení MX Haptics“, spustí `build/settings/MxHapticsSettings.exe` |
+| `src/ToggleHapticsCommand.cs` | akce „Toggle MX Haptics“ (hlavní vypínač v JSON) |
+| `src/OpenSettingsCommand.cs` | akce „MX Haptics settings“, spustí `build/settings/MxHapticsSettings.exe` |
 | `settings/` | okno nastavení (WinForms, `net10.0-windows`), ukládá JSON a posílá pluginu `reload`/`test` |
 | `settings/LogiControls.cs` | vzhled ve stylu Logi Options+: `Theme` (barvy pro tmavý/světlý režim), `ToggleSwitch`, `LogiRadio`, `LinkButton` |
 | `src/package/` | obsah balíčku: `metadata/` (LoupedeckPackage.yaml, ikona), `events/` (události a mapování na vibrace) |
 | `design/icon-source.png` | zdroj ikony (1254 × 1254 px, průhledné rohy) |
 | `design/icon.ico` | ikona exe a zástupce, generuje `tools/Convert-IconToIco.ps1` z `icon-source.png` |
-| `tools/Install-StartMenuShortcut.ps1` | zástupce „MX Haptics – nastavení“ v nabídce Start (`-Remove` smaže) |
-| `docs/screenshots/` | screenshoty okna pro README (světlý a tmavý režim) a `options-haptika.png` z Options+ (dodal uživatel) |
+| `tools/Install-StartMenuShortcut.ps1` | zástupce „MX Haptics Settings“ v nabídce Start (`-Remove` smaže; starého českého zástupce smaže vždy) |
+| `docs/screenshots/` | screenshoty okna pro README (světlý a tmavý režim) (`settings-<dark|light>.png`) a `options-plus-haptics.png` z Options+ (dodal uživatel) |
 
 ## Sestavení a ladění
 
@@ -46,21 +46,23 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 - Události mají tvar `<reakce>_<síla>` (`windowBorder_weak` …, viz `Reactions.EventName`). Všech 12 kombinací musí být
   v `DefaultEventSource.yaml` i v `eventMapping.yaml`. Novou reakci přidej do `Reactions`, `HapticsSettings`, obou YAML a do řádků okna.
 - Síla: `weak` = `subtle_collision`, `medium` = `damp_collision`, `strong` = `sharp_collision`. SDK nemá parametr síly, proto varianty událostí.
+- Texty UI, README, událostí a akcí jsou anglicky (okno: Low / Medium / High). AGENTS.md a komentáře v kódu zůstávají česky.
+  Okno má pevnou šířku, výšku nejvýš 85 % obrazovky (obsah se posouvá, patička stojí); v režimu `--screenshot` se kreslí celé.
 - Povolené vzory vibrací: `sharp_state_change`, `damp_state_change`, `sharp_collision`, `damp_collision`, `subtle_collision`,
   `happy_alert`, `angry_alert`, `completed`, `square`, `wave`, `firework`, `mad`, `knock`, `jingle`, `ringing`.
 - Hit-test přes MSAA i UIA (lišta) může v zaseknuté aplikaci/Exploreru blokovat. Proto běží ve vlastním vlákně odděleném od detekce oken; tohle oddělení zachovej.
 - Hlavní lišta: MSAA ani UIA `ElementFromPoint` do XAML lišty nevidí, proto `FindAll` tlačítek + vlastní hit-test. UIA vrací fyzické
   pixely, porovnávej s `GetPhysicalCursorPos`. Rozhraní v `TaskbarButtons.cs` jsou prefixy vtable z `UIAutomationClient.h`, pořadí nepřehazuj.
-- Lišta jde vypnout volbou `taskbarButtons` v JSON (výchozí `true`, v okně pod řádkem „Tlačítka a odkazy“). Plugin ji čte při každém vzorku přes delegát z `MxHapticsPlugin`.
+- Lišta jde vypnout volbou `taskbarButtons` v JSON (výchozí `true`, v okně „Include Windows taskbar buttons“ v sekci „Buttons and links“). Plugin ji čte při každém vzorku přes delegát z `MxHapticsPlugin`.
 - Statistika: počítá se v `RaiseReaction` až po kontrole vypínačů (test z okna ne), pod `_statsLock`. Plugin ukládá `stats.json`
   jednou za minutu a v `Unload`; okno čte přes `stats` z roury (na pozadí, `Task.Run`), jinak ze souboru. Okno do souboru nepíše.
 - Kliknutí (`click`) hlásí vlákno oken (10 ms, hrana stisku L/P tlačítka), ale jen když `_hoverKey` (píše vlákno prvků) není null.
   Vlákno oken tím dál nevolá MSAA ani UIA, jen čte volatile pole.
 - Ikonu dodává uživatel. Nekresli vlastní ani ji neupravuj. `Icon256x256.png` je zmenšenina `design/icon-source.png` na 256 × 256 (bikubicky).
   Při nové ikoně nahraď obojí a pusť `pwsh tools/Convert-IconToIco.ps1`.
-- Po změně vzhledu okna přegeneruj screenshoty: `build\settings\MxHapticsSettings.exe --screenshot docs\screenshots\nastaveni-<dark|light>.png --theme <dark|light>`.
+- Po změně vzhledu okna přegeneruj screenshoty: `build\settings\MxHapticsSettings.exe --screenshot docs\screenshots\settings-<dark|light>.png --theme <dark|light>`.
 - Okno nastavení napodobuje panel „Modify settings“ v Logi Options+: sekce oddělené čarou, nadpis + `ToggleSwitch` vpravo,
-  síla jako `LogiRadio`, „Vyzkoušet“ jako `LinkButton` (akcent, velká písmena). Barvy ber jen z `Theme.Current`, ne `SystemColors`.
+  síla jako svislý seznam `LogiRadio` pod tučným „Intensity“ s „(Default)“ u výchozí, „Try it“ jako `LinkButton` (akcent, velká písmena). Barvy ber jen z `Theme.Current`, ne `SystemColors`.
   `LinkButton` dědí z `Control`, ne z `Button`: ten si v tmavém režimu WinForms kreslí sám a vlastní `OnPaint` ignoruje.
   Tenhle režim kreslí výchozí nastavení a nic neukládá. Screenshoty okna nedělej snímáním obrazovky, uživatel s oknem může zrovna pracovat.
 - Release: postup v README („Vydání verze“), balíček `.lplug4` přes `logiplugintool pack` + `verify`, nahrát přes `gh release create`.

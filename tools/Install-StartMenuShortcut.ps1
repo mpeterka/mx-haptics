@@ -1,8 +1,9 @@
 <#
 .SYNOPSIS
-    Vytvoří (nebo smaže) zástupce „MX Haptics – nastavení“ v nabídce Start aktuálního uživatele.
+    Creates (or removes) the "MX Haptics Settings" shortcut in the current user's Start menu.
 .EXAMPLE
     pwsh tools/Install-StartMenuShortcut.ps1
+    pwsh tools/Install-StartMenuShortcut.ps1 -Target "$env:LOCALAPPDATA\Logi\LogiPluginService\Plugins\MxHaptics\settings\MxHapticsSettings.exe"
     pwsh tools/Install-StartMenuShortcut.ps1 -Remove
 #>
 param(
@@ -11,24 +12,28 @@ param(
 )
 
 $programs = [Environment]::GetFolderPath('Programs')
-$link = Join-Path $programs 'MX Haptics – nastavení.lnk'
+$link = Join-Path $programs 'MX Haptics Settings.lnk'
+# shortcut name used up to version 0.5.0
+$legacy = Join-Path $programs 'MX Haptics – nastavení.lnk'
+
+if (Test-Path -LiteralPath $legacy) { Remove-Item -LiteralPath $legacy; Write-Host "Removed old shortcut: $legacy" }
 
 if ($Remove) {
-    if (Test-Path -LiteralPath $link) { Remove-Item -LiteralPath $link; Write-Host "Zástupce smazán: $link" }
-    else { Write-Host "Zástupce neexistuje: $link" }
+    if (Test-Path -LiteralPath $link) { Remove-Item -LiteralPath $link; Write-Host "Shortcut removed: $link" }
+    else { Write-Host "Shortcut does not exist: $link" }
     return
 }
 
 $exe = [System.IO.Path]::GetFullPath($Target)
 if (-not (Test-Path -LiteralPath $exe)) {
-    throw "Okno nastavení nenalezeno: $exe. Nejdřív spusť 'dotnet build src/MxHapticsPlugin.csproj'."
+    throw "Settings window not found: $exe. Run 'dotnet build src/MxHapticsPlugin.csproj' first, or pass -Target."
 }
 
 $shell = New-Object -ComObject WScript.Shell
 $sc = $shell.CreateShortcut($link)
 $sc.TargetPath = $exe
 $sc.WorkingDirectory = Split-Path $exe
-$sc.Description = 'Nastavení hmatové odezvy myši MX Master 4 (plugin MX Haptics pro Logi Options+)'
+$sc.Description = 'Haptic feedback settings for the MX Master 4 (MX Haptics plugin for Logi Options+)'
 $sc.IconLocation = "$exe,0"
 $sc.Save()
-Write-Host "Zástupce vytvořen: $link -> $exe"
+Write-Host "Shortcut created: $link -> $exe"

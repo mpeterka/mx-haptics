@@ -1,38 +1,38 @@
-# Každá reakce má tři varianty síly; plugin posílá tu, kterou uživatel zvolil v okně nastavení.
+# Every reaction has three intensity variants; the plugin raises the one chosen in the settings window.
 events:
   - name: windowBorder_weak
-    displayName: Hranice okna (slabá)
-    description: Kurzor přejel z jednoho okna do jiného
+    displayName: Window border (low)
+    description: The pointer moved from one window to another
   - name: windowBorder_medium
-    displayName: Hranice okna (střední)
-    description: Kurzor přejel z jednoho okna do jiného
+    displayName: Window border (medium)
+    description: The pointer moved from one window to another
   - name: windowBorder_strong
-    displayName: Hranice okna (silná)
-    description: Kurzor přejel z jednoho okna do jiného
+    displayName: Window border (high)
+    description: The pointer moved from one window to another
   - name: controlHover_weak
-    displayName: Najetí na tlačítko (slabá)
-    description: Kurzor najel na tlačítko, odkaz, záložku nebo položku menu
+    displayName: Button hover (low)
+    description: The pointer entered a button, link, tab or menu item
   - name: controlHover_medium
-    displayName: Najetí na tlačítko (střední)
-    description: Kurzor najel na tlačítko, odkaz, záložku nebo položku menu
+    displayName: Button hover (medium)
+    description: The pointer entered a button, link, tab or menu item
   - name: controlHover_strong
-    displayName: Najetí na tlačítko (silná)
-    description: Kurzor najel na tlačítko, odkaz, záložku nebo položku menu
+    displayName: Button hover (high)
+    description: The pointer entered a button, link, tab or menu item
   - name: screenEdge_weak
-    displayName: Okraj obrazovky (slabá)
-    description: Kurzor narazil na okraj plochy
+    displayName: Screen edge (low)
+    description: The pointer hit the edge of the desktop
   - name: screenEdge_medium
-    displayName: Okraj obrazovky (střední)
-    description: Kurzor narazil na okraj plochy
+    displayName: Screen edge (medium)
+    description: The pointer hit the edge of the desktop
   - name: screenEdge_strong
-    displayName: Okraj obrazovky (silná)
-    description: Kurzor narazil na okraj plochy
+    displayName: Screen edge (high)
+    description: The pointer hit the edge of the desktop
   - name: click_weak
-    displayName: Kliknutí (slabá)
-    description: Kliknutí levým nebo pravým tlačítkem na tlačítko, odkaz nebo ikonu na liště
+    displayName: Click (low)
+    description: Left or right click on a button, link or taskbar icon
   - name: click_medium
-    displayName: Kliknutí (střední)
-    description: Kliknutí levým nebo pravým tlačítkem na tlačítko, odkaz nebo ikonu na liště
+    displayName: Click (medium)
+    description: Left or right click on a button, link or taskbar icon
   - name: click_strong
-    displayName: Kliknutí (silná)
-    description: Kliknutí levým nebo pravým tlačítkem na tlačítko, odkaz nebo ikonu na liště
+    displayName: Click (high)
+    description: Left or right click on a button, link or taskbar icon

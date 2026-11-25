@@ -12,27 +12,34 @@ namespace MxHaptics.Settings
 
     /// <summary>
     /// Okno nastavení ve stylu panelu „Modify settings“ v Logi Options+: sekce pod sebou oddělené čarou,
-    /// nadpis sekce s přepínačem vpravo, síla jako kulaté volby, „Vyzkoušet“ jako odkaz v barvě akcentu.
+    /// nadpis sekce s přepínačem vpravo, síla jako svislý seznam kulatých voleb („Haptic intensity“),
+    /// „Try it“ jako odkaz v barvě akcentu. Obsah se posouvá, patička zůstává dole.
     /// </summary>
     internal sealed class SettingsForm : Form
     {
-        private const Int32 ContentWidth = 560;
+        private const Int32 ContentWidth = 520;
 
         private static readonly (String Reaction, String Title, String Description)[] Rows =
         {
-            (Reactions.WindowBorder, "Hranice okna", "Kurzor přejede z jednoho okna do jiného."),
-            (Reactions.ControlHover, "Tlačítka a odkazy", "Najetí na tlačítko, odkaz, záložku nebo položku menu."),
-            (Reactions.ScreenEdge, "Okraj obrazovky", "Náraz na vnější okraj plochy."),
-            (Reactions.Click, "Kliknutí", "Levé nebo pravé tlačítko myši na tlačítku, odkazu nebo ikoně na liště."),
+            (Reactions.WindowBorder, "Window borders", "The pointer moves from one window to another."),
+            (Reactions.ControlHover, "Buttons and links", "The pointer enters a button, link, tab or menu item."),
+            (Reactions.ScreenEdge, "Screen edge", "The pointer hits the outer edge of the desktop."),
+            (Reactions.Click, "Click", "Left or right click on a button, link or taskbar icon."),
         };
 
-        private static readonly String[] StrengthLabels = { "Slabá", "Střední", "Silná" };
+        private static readonly String[] StrengthLabels = { "Low", "Medium", "High" };
+
+        private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
 
         private readonly Theme _theme = Theme.Current;
         private readonly HapticsSettings _settings;
+        private readonly HapticsSettings _defaults = new();
         private readonly Boolean _readOnly;
         private readonly ToggleSwitch _masterSwitch;
         private readonly List<RowUi> _rows = new();
+        private readonly TableLayoutPanel _content;
+        private readonly Panel _scroller;
+        private readonly TableLayoutPanel _footer;
         private readonly Label _status;
         private readonly Label _statsSince;
         private ToggleSwitch _taskbarToggle;
@@ -48,18 +55,16 @@ namespace MxHaptics.Settings
             public Label Count;
         }
 
-        /// <param name="readOnly">Pro screenshoty: výchozí nastavení, nic neukládá ani neposílá pluginu.</param>
+        /// <param name="readOnly">Pro screenshoty: výchozí nastavení, celé okno bez posuvníku, nic neukládá ani neposílá pluginu.</param>
         public SettingsForm(Boolean readOnly = false)
         {
             this._readOnly = readOnly;
             this._settings = readOnly ? new HapticsSettings() : HapticsSettings.Load();
 
-            this.Text = "MX Haptics – nastavení";
+            this.Text = "MX Haptics – Settings";
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.AutoSize = true;
-            this.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             this.AutoScaleMode = AutoScaleMode.Dpi;
             this.BackColor = this._theme.Back;
             this.ForeColor = this._theme.Text;
@@ -80,69 +85,66 @@ namespace MxHaptics.Settings
                 }
             }
 
-            var root = new TableLayoutPanel { AutoSize = true, ColumnCount = 1, Margin = Padding.Empty, Padding = Padding.Empty };
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            this._content = new TableLayoutPanel { AutoSize = true, ColumnCount = 1, Margin = Padding.Empty, Padding = Padding.Empty, Location = Point.Empty };
+            this._content.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
             // --- hlavička ---
             var header = this.Section(new Padding(24, 20, 24, 16));
             var iconImage = LoadIconImage();
             if (iconImage != null)
             {
-                header.Controls.Add(new PictureBox
-                {
-                    Image = iconImage,
-                    SizeMode = PictureBoxSizeMode.Zoom,
-                    Size = new Size(44, 44),
-                    Margin = new Padding(0, 0, 14, 0),
-                }, 0, 0);
-                header.SetRowSpan(header.GetControlFromPosition(0, 0), 2);
+                var icon = new PictureBox { Image = iconImage, SizeMode = PictureBoxSizeMode.Zoom, Size = new Size(44, 44), Margin = new Padding(0, 0, 14, 0) };
+                header.Controls.Add(icon, 0, 0);
+                header.SetRowSpan(icon, 2);
             }
 
-            header.Controls.Add(new Label
-            {
-                Text = "MX Haptics",
-                AutoSize = true,
-                Font = new Font(this.Font.FontFamily, 17f, FontStyle.Bold),
-                Margin = Padding.Empty,
-            }, 1, 0);
-            header.Controls.Add(this.Secondary("Hmatová odezva myši MX Master 4"), 1, 1);
+            header.Controls.Add(new Label { Text = "MX Haptics", AutoSize = true, Font = new Font(this.Font.FontFamily, 17f, FontStyle.Bold), Margin = Padding.Empty }, 1, 0);
+            header.Controls.Add(this.Secondary("Haptic feedback for the MX Master 4 across Windows"), 1, 1);
             header.ColumnStyles.Clear();
             header.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            this.AddSection(root, header);
+            this.AddSection(header);
 
             // --- hlavní vypínač ---
             var master = this.Section();
-            master.Controls.Add(this.Title("Haptická odezva", large: true), 0, 0);
-            this._masterSwitch = new ToggleSwitch { Checked = this._settings.Enabled, AccessibleName = "Haptická odezva", Anchor = AnchorStyles.Right };
+            master.Controls.Add(this.Title("Haptic feedback", large: true), 0, 0);
+            this._masterSwitch = new ToggleSwitch { Checked = this._settings.Enabled, AccessibleName = "Haptic feedback", Anchor = AnchorStyles.Right };
             master.Controls.Add(this._masterSwitch, 1, 0);
-            master.Controls.Add(this.Secondary("Hlavní vypínač všech reakcí. Změny se ukládají hned."), 0, 1);
-            master.SetColumnSpan(master.GetControlFromPosition(0, 1), 2);
+            var masterDesc = this.Secondary("Master switch for all reactions. Changes are saved instantly.");
+            master.Controls.Add(masterDesc, 0, 1);
+            master.SetColumnSpan(masterDesc, 2);
             this._masterSwitch.CheckedChanged += (_, _) =>
             {
                 this._settings.Enabled = this._masterSwitch.Checked;
                 this.UpdateEnabledState();
                 this.SaveAndNotify();
             };
-            this.AddSection(root, master);
+            this.AddSection(master);
 
             // --- reakce ---
             foreach (var (reaction, title, description) in Rows)
             {
-                this.AddSection(root, this.BuildReaction(reaction, title, description));
+                this.AddSection(this.BuildReaction(reaction, title, description));
             }
 
-            // --- patička ---
-            var footer = this.Section(new Padding(24, 14, 24, 18));
+            this._scroller = new Panel { Dock = DockStyle.Fill, AutoScroll = true, Margin = Padding.Empty };
+            this._scroller.Controls.Add(this._content);
+
+            // --- patička (mimo posuvnou část) ---
+            this._footer = this.Section(new Padding(24, 14, 24, 18));
+            this._footer.Dock = DockStyle.Bottom;
             this._status = new Label { AutoSize = true, Anchor = AnchorStyles.Left, Margin = Padding.Empty };
             this._statsSince = new Label { AutoSize = true, Anchor = AnchorStyles.Right, ForeColor = this._theme.Secondary, Margin = Padding.Empty };
-            footer.Controls.Add(this._status, 0, 0);
-            footer.Controls.Add(this._statsSince, 1, 0);
-            root.Controls.Add(footer);
+            this._footer.Controls.Add(this._status, 0, 0);
+            this._footer.Controls.Add(this._statsSince, 1, 0);
+            var footerLine = new Panel { Height = 1, Dock = DockStyle.Bottom, BackColor = this._theme.Divider };
 
-            this.Controls.Add(root);
+            this.Controls.Add(this._scroller);
+            this.Controls.Add(footerLine);
+            this.Controls.Add(this._footer);
+
             this.UpdateEnabledState();
-            this.UpdateStatus(readOnly || PluginClient.Send("reload") != null ? "Plugin běží." : null);
+            this.UpdateStatus(readOnly || PluginClient.Send("reload") != null ? "Plugin is running." : null);
             this._loading = readOnly;
 
             if (readOnly)
@@ -159,9 +161,24 @@ namespace MxHaptics.Settings
             }
         }
 
+        /// <summary>Velikost až po přepočtu na DPI: šířka podle obsahu, výška nejvýš 85 % obrazovky (pro screenshoty celé).</summary>
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            var content = this._content.GetPreferredSize(Size.Empty);
+            var footer = this._footer.GetPreferredSize(new Size(content.Width, 0)).Height + 1;
+            var max = (Int32)(Screen.FromControl(this).WorkingArea.Height * 0.85) - (this.Height - this.ClientSize.Height) - footer;
+            var scroll = !this._readOnly && content.Height > max;
+            this.ClientSize = new Size(
+                content.Width + (scroll ? SystemInformation.VerticalScrollBarWidth : 0),
+                (scroll ? max : content.Height) + footer);
+            this.CenterToScreen();
+        }
+
         private TableLayoutPanel BuildReaction(String reaction, String title, String description)
         {
             var rs = this._settings.For(reaction);
+            var defaultStrength = this._defaults.For(reaction).Strength;
             var row = new RowUi { Reaction = reaction };
             var section = this.Section();
             var r = 0;
@@ -176,14 +193,14 @@ namespace MxHaptics.Settings
 
             if (reaction == Reactions.ControlHover)
             {
-                var taskbarLabel = new Label { Text = "I tlačítka na hlavní liště Windows", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 10, 0, 0) };
+                var taskbarLabel = new Label { Text = "Include Windows taskbar buttons", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(0, 12, 0, 0) };
                 this._taskbarToggle = new ToggleSwitch
                 {
                     Checked = this._settings.TaskbarButtons,
                     AccessibleName = taskbarLabel.Text,
                     Anchor = AnchorStyles.Right,
                     Size = new Size(38, 20),
-                    Margin = new Padding(16, 10, 0, 0),
+                    Margin = new Padding(16, 12, 0, 0),
                 };
                 this._taskbarToggle.CheckedChanged += (_, _) =>
                 {
@@ -194,13 +211,19 @@ namespace MxHaptics.Settings
                 section.Controls.Add(this._taskbarToggle, 1, r++);
             }
 
-            // síla jako „Haptic intensity“ v Options+, vedle odkaz Vyzkoušet
-            var strengths = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0, 12, 0, 0), Anchor = AnchorStyles.Left };
-            strengths.Controls.Add(new Label { Text = "Síla", AutoSize = true, ForeColor = this._theme.Secondary, Margin = new Padding(0, 2, 16, 0) });
+            // síla jako „Haptic intensity“ v Options+: tučný nadpis a svislý seznam s „(Default)“
+            var intensity = new Label { Text = "Intensity", AutoSize = true, Font = new Font(this.Font, FontStyle.Bold), Margin = new Padding(0, 16, 0, 6) };
+            section.Controls.Add(intensity, 0, r++);
+            var strengths = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.TopDown, WrapContents = false, Margin = Padding.Empty };
             for (var i = 0; i < StrengthLabels.Length; i++)
             {
                 var strength = (Strength)i;
-                var radio = new LogiRadio { Text = StrengthLabels[i], Checked = rs.Strength == strength };
+                var radio = new LogiRadio
+                {
+                    Text = strength == defaultStrength ? $"{StrengthLabels[i]} (Default)" : StrengthLabels[i],
+                    Checked = rs.Strength == strength,
+                    AccessibleDescription = $"{title} intensity",
+                };
                 radio.CheckedChanged += (_, _) =>
                 {
                     if (!radio.Checked)
@@ -216,15 +239,16 @@ namespace MxHaptics.Settings
                 row.Radios.Add(radio);
             }
 
-            row.Test = new LinkButton { Text = "Vyzkoušet", Anchor = AnchorStyles.Right, Margin = new Padding(16, 12, 0, 0) };
-            row.Test.Click += (_, _) => this.Test(reaction, rs.Strength);
-            section.Controls.Add(strengths, 0, r);
-            section.Controls.Add(row.Test, 1, r++);
+            section.Controls.Add(strengths, 0, r++);
 
+            // „Try it“ vlevo jako „OPEN ACTIONS RING“, počty vpravo
+            row.Test = new LinkButton { Text = "Try it", Anchor = AnchorStyles.Left, Margin = new Padding(0, 10, 0, 0), AccessibleName = $"Try {title}" };
+            row.Test.Click += (_, _) => this.Test(reaction, rs.Strength);
             row.Count = this.Secondary(String.Empty);
-            row.Count.Margin = new Padding(0, 10, 0, 0);
-            section.Controls.Add(row.Count, 0, r);
-            section.SetColumnSpan(row.Count, 2);
+            row.Count.Anchor = AnchorStyles.Right;
+            row.Count.Margin = new Padding(16, 10, 0, 0);
+            section.Controls.Add(row.Test, 0, r);
+            section.Controls.Add(row.Count, 1, r);
 
             row.Toggle.CheckedChanged += (_, _) =>
             {
@@ -253,10 +277,10 @@ namespace MxHaptics.Settings
             return section;
         }
 
-        private void AddSection(TableLayoutPanel root, Control section)
+        private void AddSection(Control section)
         {
-            root.Controls.Add(section);
-            root.Controls.Add(new Panel
+            this._content.Controls.Add(section);
+            this._content.Controls.Add(new Panel
             {
                 Height = 1,
                 Margin = Padding.Empty,
@@ -338,12 +362,12 @@ namespace MxHaptics.Settings
             var today = DateTime.Now;
             foreach (var row in this._rows)
             {
-                row.Count.Text = $"Dnes {stats.DayOf(row.Reaction, today):N0}   ·   celkem {stats.TotalOf(row.Reaction):N0}";
+                row.Count.Text = String.Format(English, "Today {0:N0}  ·  Total {1:N0}", stats.DayOf(row.Reaction, today), stats.TotalOf(row.Reaction));
             }
 
             this._statsSince.Text = DateTime.TryParseExact(stats.Since, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var since)
-                ? $"Počty vibrací od {since:d}"
-                : "Počty vibrací: zatím žádné";
+                ? String.Format(English, "Counted since {0:MMM d, yyyy}", since)
+                : "No vibrations counted yet";
         }
 
         private void SaveAndNotify()
@@ -359,11 +383,11 @@ namespace MxHaptics.Settings
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                this.UpdateStatus($"Nastavení nejde uložit: {ex.Message}", error: true);
+                this.UpdateStatus($"Settings could not be saved: {ex.Message}", error: true);
                 return;
             }
 
-            this.UpdateStatus(PluginClient.Send("reload") != null ? "Uloženo." : null);
+            this.UpdateStatus(PluginClient.Send("reload") != null ? "Saved." : null);
         }
 
         private void Test(String reaction, Strength strength)
@@ -376,7 +400,7 @@ namespace MxHaptics.Settings
             var response = PluginClient.Send($"test {reaction} {strength.ToString().ToLowerInvariant()}");
             if (response != null && response != "ok")
             {
-                this.UpdateStatus($"Plugin odpověděl: {response}", error: true);
+                this.UpdateStatus($"Plugin replied: {response}", error: true);
             }
             else if (response == null)
             {
@@ -389,7 +413,7 @@ namespace MxHaptics.Settings
         {
             if (text == null)
             {
-                this._status.Text = "Plugin neběží – nastavení se použije po jeho spuštění.";
+                this._status.Text = "Plugin is not running – settings apply once it starts.";
                 this._status.ForeColor = this._theme.Warning;
                 return;
             }

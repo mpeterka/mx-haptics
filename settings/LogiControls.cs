@@ -146,19 +146,19 @@ namespace MxHaptics.Settings
         }
     }
 
-    /// <summary>Kulatá volba jako „Haptic intensity“ v Options+: šedý kruh, vybraný tyrkysový s tečkou.</summary>
+    /// <summary>Kulatá volba jako „Haptic intensity“ v Options+: šedý kruh, vybraný tyrkysový s tečkou; v seznamu pod sebou.</summary>
     internal sealed class LogiRadio : RadioButton
     {
         public LogiRadio()
         {
             OwnerDraw.SetOwnerDrawn(this, this.SetStyle);
             this.AutoSize = true;
-            this.Margin = new Padding(0, 0, 20, 0);
+            this.Margin = new Padding(0, 4, 0, 4);
         }
 
-        private Int32 CircleSize => this.Font.Height;
+        private Int32 CircleSize => (Int32)(this.Font.Height * 1.2);
 
-        private Int32 Gap => this.Font.Height / 2;
+        private Int32 Gap => (Int32)(this.Font.Height * 0.8);
 
         public override Size GetPreferredSize(Size proposedSize)
         {

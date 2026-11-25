@@ -5,7 +5,7 @@ namespace Loupedeck.MxHapticsPlugin
     public class ToggleHapticsCommand : PluginDynamicCommand
     {
         public ToggleHapticsCommand()
-            : base("Zapnout/vypnout MX Haptics", "Přepne hmatovou odezvu při pohybu kurzoru", "MX Haptics")
+            : base("Toggle MX Haptics", "Turns haptic feedback for pointer movement on or off", "MX Haptics")
         {
         }
 
@@ -18,6 +18,6 @@ namespace Loupedeck.MxHapticsPlugin
         }
 
         protected override String GetCommandDisplayName(String actionParameter, PluginImageSize imageSize) =>
-            this.HapticsPlugin.Enabled ? "Haptika: zap" : "Haptika: vyp";
+            this.HapticsPlugin.Enabled ? "Haptics: on" : "Haptics: off";
     }
 }

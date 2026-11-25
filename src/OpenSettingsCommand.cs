@@ -5,7 +5,7 @@ namespace Loupedeck.MxHapticsPlugin
     public class OpenSettingsCommand : PluginDynamicCommand
     {
         public OpenSettingsCommand()
-            : base("Nastavení MX Haptics", "Otevře okno s nastavením reakcí a síly vibrací", "MX Haptics")
+            : base("MX Haptics settings", "Opens the window with reaction and intensity settings", "MX Haptics")
         {
         }
 
