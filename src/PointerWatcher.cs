@@ -39,9 +39,14 @@ namespace Loupedeck.MxHapticsPlugin
         private readonly CancellationTokenSource _cts = new();
         private readonly Stopwatch _clock = Stopwatch.StartNew();
         private Thread _windowThread;
+        private readonly Func<Boolean> _taskbarEnabled;
         private Thread _controlThread;
 
-        public PointerWatcher(Action<String> raise) => this._raise = raise;
+        public PointerWatcher(Action<String> raise, Func<Boolean> taskbarEnabled)
+        {
+            this._raise = raise;
+            this._taskbarEnabled = taskbarEnabled;
+        }
 
         public void Start()
         {
@@ -165,7 +170,8 @@ namespace Loupedeck.MxHapticsPlugin
                     }
 
                     // hlavní lišta Windows 11 je pro MSAA jeden blok, tlačítka bere z UI Automation
-                    if (!taskbar.TryGetKey(p, this.Now, out var key))
+                    String key = null;
+                    if (!this._taskbarEnabled() || !taskbar.TryGetKey(p, this.Now, out key))
                     {
                         key = FindClickableKey(p);
                     }

@@ -49,6 +49,7 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 - Hit-test přes MSAA i UIA (lišta) může v zaseknuté aplikaci/Exploreru blokovat. Proto běží ve vlastním vlákně odděleném od detekce oken; tohle oddělení zachovej.
 - Hlavní lišta: MSAA ani UIA `ElementFromPoint` do XAML lišty nevidí, proto `FindAll` tlačítek + vlastní hit-test. UIA vrací fyzické
   pixely, porovnávej s `GetPhysicalCursorPos`. Rozhraní v `TaskbarButtons.cs` jsou prefixy vtable z `UIAutomationClient.h`, pořadí nepřehazuj.
+- Lišta jde vypnout volbou `taskbarButtons` v JSON (výchozí `true`, v okně pod řádkem „Tlačítka a odkazy“). Plugin ji čte při každém vzorku přes delegát z `MxHapticsPlugin`.
 - Ikonu dodává uživatel. Nekresli vlastní ani ji neupravuj. `Icon256x256.png` je zmenšenina `design/icon-source.png` na 256 × 256 (bikubicky).
   Při nové ikoně nahraď obojí a pusť `pwsh tools/Convert-IconToIco.ps1`.
 - Po změně vzhledu okna přegeneruj screenshoty: `build\settings\MxHapticsSettings.exe --screenshot docs\screenshots\nastaveni-<dark|light>.png --theme <dark|light>`.

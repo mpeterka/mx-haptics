@@ -55,6 +55,9 @@ namespace MxHaptics.Shared
 
         public ReactionSettings ScreenEdge { get; set; } = new() { Strength = Strength.Medium };
 
+        /// <summary>Reakce <see cref="Reactions.ControlHover"/> i na tlačítkách hlavní lišty Windows (UI Automation).</summary>
+        public Boolean TaskbarButtons { get; set; } = true;
+
         public static String DirectoryPath =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MxHaptics");
 

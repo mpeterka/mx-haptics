@@ -22,6 +22,7 @@ namespace MxHaptics.Settings
         private readonly HapticsSettings _settings;
         private readonly Boolean _readOnly;
         private readonly CheckBox _masterSwitch;
+        private readonly CheckBox _taskbarCheck;
         private readonly List<Control> _rowControls = new();
         private readonly Label _status;
         private Boolean _loading = true;
@@ -104,6 +105,23 @@ namespace MxHaptics.Settings
                 cell.Controls.Add(enabled);
                 cell.Controls.Add(desc);
 
+                if (reaction == Reactions.ControlHover)
+                {
+                    this._taskbarCheck = new CheckBox
+                    {
+                        Text = "I tlačítka na hlavní liště Windows",
+                        AutoSize = true,
+                        Checked = this._settings.TaskbarButtons,
+                        Margin = new Padding(20, 0, 16, 10),
+                    };
+                    this._taskbarCheck.CheckedChanged += (_, _) =>
+                    {
+                        this._settings.TaskbarButtons = this._taskbarCheck.Checked;
+                        this.SaveAndNotify();
+                    };
+                    cell.Controls.Add(this._taskbarCheck);
+                }
+
                 var strength = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 110, Anchor = AnchorStyles.Left, Margin = new Padding(0, 8, 8, 0) };
                 strength.Items.AddRange(StrengthLabels);
                 strength.SelectedIndex = (Int32)rs.Strength;
@@ -113,7 +131,7 @@ namespace MxHaptics.Settings
                 enabled.CheckedChanged += (_, _) =>
                 {
                     rs.Enabled = enabled.Checked;
-                    strength.Enabled = enabled.Checked && this._settings.Enabled;
+                    this.UpdateEnabledState();
                     this.SaveAndNotify();
                 };
                 strength.SelectedIndexChanged += (_, _) =>
@@ -168,6 +186,8 @@ namespace MxHaptics.Settings
                 this._rowControls[i + 1].Enabled = on && enabled.Checked;
                 this._rowControls[i + 2].Enabled = on;
             }
+
+            this._taskbarCheck.Enabled = on && this._settings.ControlHover.Enabled;
         }
 
         private void SaveAndNotify()

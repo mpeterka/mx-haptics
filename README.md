@@ -55,6 +55,7 @@ V okně můžeš:
 
 - celou haptiku zapnout nebo vypnout,
 - každou reakci zvlášť zapnout nebo vypnout,
+- u reakce *Tlačítka a odkazy* vypnout tlačítka na hlavní liště Windows (*I tlačítka na hlavní liště Windows*),
 - zvolit sílu reakce: slabá (`subtle_collision`), střední (`damp_collision`), silná (`sharp_collision`),
 - tlačítkem *Vyzkoušet* si vibraci hned ohmatat (funguje i u vypnuté reakce).
 

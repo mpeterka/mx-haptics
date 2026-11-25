@@ -28,7 +28,7 @@ namespace Loupedeck.MxHapticsPlugin
         {
             this.ReloadSettings();
 
-            this._watcher = new PointerWatcher(this.RaiseReaction);
+            this._watcher = new PointerWatcher(this.RaiseReaction, () => this._settings.TaskbarButtons);
             this._watcher.Start();
 
             this._pipe = new ControlPipeServer(this.HandleCommand);
