@@ -13,7 +13,9 @@ namespace Loupedeck.MxHapticsPlugin
         private volatile HapticsSettings _settings = new();
         private readonly Object _statsLock = new();
         private HapticsStats _stats = new();
+        private readonly Object _statsSaveLock = new();
         private Boolean _statsDirty;
+        private Boolean _statsPendingMerge;
         private System.Threading.Timer _statsTimer;
 
         public override Boolean UsesApplicationApiOnly => true;
@@ -30,10 +32,12 @@ namespace Loupedeck.MxHapticsPlugin
 
         public override void Load()
         {
-            this.ReloadSettings();
+            this._settings = HapticsSettings.Load();
             lock (this._statsLock)
             {
-                this._stats = HapticsStats.Load();
+                // nepřečtenou historii nesmíme přepsat: počítáme do prázdné a sloučíme, až se soubor podaří přečíst
+                this._statsPendingMerge = !HapticsStats.TryLoad(quarantineCorrupt: true, out var stats);
+                this._stats = stats ?? new HapticsStats();
             }
 
             this._statsTimer = new System.Threading.Timer(_ => this.SaveStats(), null, 60_000, 60_000);
@@ -56,14 +60,43 @@ namespace Loupedeck.MxHapticsPlugin
             this.SaveStats();
         }
 
-        public void ReloadSettings() => this._settings = HapticsSettings.Load();
+        /// <summary>Změna hlavního vypínače (okno nastavení, akce Toggle); akce podle ní obnoví popisek.</summary>
+        public event Action EnabledChanged;
+
+        /// <summary>Načte nastavení znovu (příkaz <c>reload</c> z okna). Nečitelný soubor nechá platit dosavadní stav.</summary>
+        public void ReloadSettings()
+        {
+            if (HapticsSettings.TryLoad(out var settings))
+            {
+                this.ApplySettings(settings);
+            }
+        }
 
         public void ToggleEnabled()
         {
-            var settings = HapticsSettings.Load();
+            // základ ze souboru (okno mohlo mezitím něco změnit); když nejde přečíst, z paměti
+            var settings = HapticsSettings.TryLoad(out var loaded) ? loaded : this._settings;
             settings.Enabled = !settings.Enabled;
-            settings.Save();
+            this.ApplySettings(settings);
+            try
+            {
+                settings.Save();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // přepnutí platí aspoň do restartu pluginu
+                Trace.WriteLine($"MxHaptics: nastavení nejde uložit: {ex.Message}");
+            }
+        }
+
+        private void ApplySettings(HapticsSettings settings)
+        {
+            var enabledChanged = settings.Enabled != this._settings.Enabled;
             this._settings = settings;
+            if (enabledChanged)
+            {
+                this.EnabledChanged?.Invoke();
+            }
         }
 
         public void OpenSettings()
@@ -100,28 +133,46 @@ namespace Loupedeck.MxHapticsPlugin
 
         private void SaveStats()
         {
-            String json;
-            lock (this._statsLock)
+            // timer a Unload se můžou potkat: zápis jen jeden naráz
+            lock (this._statsSaveLock)
             {
-                if (!this._statsDirty)
+                if (this._statsPendingMerge)
                 {
-                    return;
+                    if (!HapticsStats.TryLoad(quarantineCorrupt: true, out var onDisk))
+                    {
+                        return; // soubor pořád nejde přečíst: nepřepisovat, zkusit při dalším uložení
+                    }
+
+                    lock (this._statsLock)
+                    {
+                        this._stats.MergeFrom(onDisk);
+                        this._statsPendingMerge = false;
+                    }
                 }
 
-                json = this._stats.ToJson();
-                this._statsDirty = false;
-            }
-
-            try
-            {
-                HapticsStats.FromJson(json).Save();
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                Trace.WriteLine($"MxHaptics: statistiku nejde uložit: {ex.Message}");
+                String json;
                 lock (this._statsLock)
                 {
-                    this._statsDirty = true;
+                    if (!this._statsDirty)
+                    {
+                        return;
+                    }
+
+                    json = this._stats.ToJson();
+                    this._statsDirty = false;
+                }
+
+                try
+                {
+                    HapticsStats.FromJson(json).Save();
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    Trace.WriteLine($"MxHaptics: statistiku nejde uložit: {ex.Message}");
+                    lock (this._statsLock)
+                    {
+                        this._statsDirty = true;
+                    }
                 }
             }
         }
@@ -158,7 +209,8 @@ namespace Loupedeck.MxHapticsPlugin
 
             if (parts.Length == 3 && parts[0] == "test"
                 && Array.IndexOf(Reactions.All, parts[1]) >= 0
-                && Enum.TryParse<Strength>(parts[2], ignoreCase: true, out var strength))
+                && Enum.TryParse<Strength>(parts[2], ignoreCase: true, out var strength)
+                && Enum.IsDefined(strength))
             {
                 // test vibruje i při vypnuté reakci, aby šlo sílu vyzkoušet před zapnutím
                 this.RaiseEvent(Reactions.EventName(parts[1], strength));

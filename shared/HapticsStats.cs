@@ -51,42 +51,108 @@ namespace MxHaptics.Shared
         {
             try
             {
-                var stats = String.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<HapticsStats>(json, JsonOptions);
-                if (stats != null)
-                {
-                    stats.Total ??= new();
-                    stats.Days ??= new();
-                    return stats;
-                }
+                return Normalize(String.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<HapticsStats>(json, JsonOptions));
             }
             catch (JsonException ex)
             {
                 System.Diagnostics.Trace.WriteLine($"MxHaptics: statistika nejde přečíst: {ex.Message}");
-            }
-
-            return new HapticsStats();
-        }
-
-        public static HapticsStats Load()
-        {
-            try
-            {
-                return FromJson(File.Exists(FilePath) ? File.ReadAllText(FilePath) : null);
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                System.Diagnostics.Trace.WriteLine($"MxHaptics: statistika nejde načíst: {ex.Message}");
                 return new HapticsStats();
             }
         }
 
-        /// <summary>Uloží atomicky (zápis do dočasného souboru a přejmenování).</summary>
-        public void Save()
+        /// <summary>Pro zobrazení (okno): když soubor nejde přečíst, vrátí prázdnou statistiku. Nic nepřepisuje.</summary>
+        public static HapticsStats Load() => TryLoad(quarantineCorrupt: false, out var stats) ? stats : new HapticsStats();
+
+        /// <summary>
+        /// Načte statistiku. Chybějící soubor = prázdná (true). Zamčený i po opakování = false: volající ho nesmí přepsat,
+        /// jinak by zmizela historie. Poškozený JSON s <paramref name="quarantineCorrupt"/> přejmenuje na
+        /// <c>stats.json.bad-&lt;čas&gt;</c> a začne od nuly (true); bez něj vrátí false.
+        /// </summary>
+        public static Boolean TryLoad(Boolean quarantineCorrupt, out HapticsStats stats)
         {
-            Directory.CreateDirectory(HapticsSettings.DirectoryPath);
-            var tmp = FilePath + ".tmp";
-            File.WriteAllText(tmp, this.ToJson());
-            File.Move(tmp, FilePath, overwrite: true);
+            String json;
+            try
+            {
+                json = SafeFile.ReadAllTextOrNull(FilePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                System.Diagnostics.Trace.WriteLine($"MxHaptics: statistika nejde načíst: {ex.Message}");
+                stats = null;
+                return false;
+            }
+
+            if (json == null)
+            {
+                stats = new HapticsStats();
+                return true;
+            }
+
+            try
+            {
+                stats = Normalize(JsonSerializer.Deserialize<HapticsStats>(json, JsonOptions));
+                return true;
+            }
+            catch (JsonException ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"MxHaptics: statistika je poškozená: {ex.Message}");
+                stats = null;
+                if (!quarantineCorrupt)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    File.Move(FilePath, $"{FilePath}.bad-{DateTime.Now:yyyyMMdd-HHmmss}");
+                }
+                catch (Exception moveEx) when (moveEx is IOException or UnauthorizedAccessException)
+                {
+                    System.Diagnostics.Trace.WriteLine($"MxHaptics: poškozenou statistiku nejde odložit: {moveEx.Message}");
+                    return false;
+                }
+
+                stats = new HapticsStats();
+                return true;
+            }
+        }
+
+        /// <summary>Přičte počty z <paramref name="other"/> (soubor, který se napoprvé nepodařilo přečíst).</summary>
+        public void MergeFrom(HapticsStats other)
+        {
+            if (other.Since != null && (this.Since == null || String.CompareOrdinal(other.Since, this.Since) < 0))
+            {
+                this.Since = other.Since;
+            }
+
+            foreach (var (reaction, count) in other.Total)
+            {
+                this.Total[reaction] = this.TotalOf(reaction) + count;
+            }
+
+            foreach (var (day, counts) in other.Days)
+            {
+                if (!this.Days.TryGetValue(day, out var mine))
+                {
+                    this.Days[day] = mine = new Dictionary<String, Int64>();
+                }
+
+                foreach (var (reaction, count) in counts)
+                {
+                    mine[reaction] = mine.GetValueOrDefault(reaction) + count;
+                }
+            }
+        }
+
+        /// <summary>Uloží atomicky (viz <see cref="SafeFile"/>).</summary>
+        public void Save() => SafeFile.WriteAllTextAtomic(FilePath, this.ToJson());
+
+        private static HapticsStats Normalize(HapticsStats stats)
+        {
+            stats ??= new HapticsStats();
+            stats.Total ??= new();
+            stats.Days ??= new();
+            return stats;
         }
     }
 }

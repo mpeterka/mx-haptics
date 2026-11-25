@@ -75,35 +75,45 @@ namespace MxHaptics.Shared
             _ => throw new ArgumentOutOfRangeException(nameof(reaction), reaction, "Neznámá reakce"),
         };
 
-        /// <summary>Načte nastavení; při chybějícím nebo poškozeném souboru vrátí výchozí.</summary>
-        public static HapticsSettings Load()
+        /// <summary>Načte nastavení; když soubor chybí nebo nejde přečíst, vrátí výchozí.</summary>
+        public static HapticsSettings Load() => TryLoad(out var settings) ? settings : new HapticsSettings();
+
+        /// <summary>
+        /// Načte nastavení. Chybějící soubor = výchozí nastavení (true). False = soubor existuje, ale nejde přečíst
+        /// (zamčený i po opakování, poškozený): volající si má nechat svůj stav, ne ho nahradit výchozím.
+        /// </summary>
+        public static Boolean TryLoad(out HapticsSettings settings)
         {
             try
             {
-                if (File.Exists(FilePath))
-                {
-                    var loaded = JsonSerializer.Deserialize<HapticsSettings>(File.ReadAllText(FilePath), JsonOptions);
-                    if (loaded != null)
-                    {
-                        return loaded;
-                    }
-                }
+                var json = SafeFile.ReadAllTextOrNull(FilePath);
+                settings = (json == null ? null : JsonSerializer.Deserialize<HapticsSettings>(json, JsonOptions)) ?? new HapticsSettings();
+                settings.Normalize();
+                return true;
             }
             catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
             {
                 System.Diagnostics.Trace.WriteLine($"MxHaptics: nastavení nejde načíst: {ex.Message}");
+                settings = null;
+                return false;
             }
-
-            return new HapticsSettings();
         }
 
-        /// <summary>Uloží atomicky (zápis do dočasného souboru a přejmenování).</summary>
-        public void Save()
+        /// <summary>Uloží atomicky; souběžný zápis pluginu a okna se nepřepisuje (viz <see cref="SafeFile"/>).</summary>
+        public void Save() => SafeFile.WriteAllTextAtomic(FilePath, JsonSerializer.Serialize(this, JsonOptions));
+
+        /// <summary>Síla mimo enum (ručně upravený JSON, číslo) by dala neexistující událost: vrátí výchozí.</summary>
+        private void Normalize()
         {
-            Directory.CreateDirectory(DirectoryPath);
-            var tmp = FilePath + ".tmp";
-            File.WriteAllText(tmp, JsonSerializer.Serialize(this, JsonOptions));
-            File.Move(tmp, FilePath, overwrite: true);
+            var defaults = new HapticsSettings();
+            foreach (var reaction in Reactions.All)
+            {
+                var rs = this.For(reaction);
+                if (!Enum.IsDefined(rs.Strength))
+                {
+                    rs.Strength = defaults.For(reaction).Strength;
+                }
+            }
         }
     }
 }

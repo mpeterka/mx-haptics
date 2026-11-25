@@ -11,11 +11,20 @@ namespace Loupedeck.MxHapticsPlugin
 
         private MxHapticsPlugin HapticsPlugin => (MxHapticsPlugin)this.Plugin;
 
-        protected override void RunCommand(String actionParameter)
+        // popisek „Haptics: on/off“ obnovit i při změně z okna nastavení, nejen po stisku této akce
+        protected override Boolean OnLoad()
         {
-            this.HapticsPlugin.ToggleEnabled();
-            this.ActionImageChanged();
+            this.HapticsPlugin.EnabledChanged += this.ActionImageChanged;
+            return base.OnLoad();
         }
+
+        protected override Boolean OnUnload()
+        {
+            this.HapticsPlugin.EnabledChanged -= this.ActionImageChanged;
+            return base.OnUnload();
+        }
+
+        protected override void RunCommand(String actionParameter) => this.HapticsPlugin.ToggleEnabled();
 
         protected override String GetCommandDisplayName(String actionParameter, PluginImageSize imageSize) =>
             this.HapticsPlugin.Enabled ? "Haptics: on" : "Haptics: off";

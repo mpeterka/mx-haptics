@@ -43,6 +43,7 @@ on the approach.
   in the window (*Subtle*, *Damp*, *Sharp*).
 - The settings window talks to the plugin over the named pipe `MxHaptics` (current user only): `reload` after saving,
   `test <reaction> <weak|medium|strong>` for *Try it* and `stats` for the counts. One line per command, one line per reply.
+  The server closes a connection that doesn't send its command within 2 s; the window waits at most 1.5 s for a reply.
 - The plugin keeps the counts in memory and saves them every minute and on exit. When the plugin isn't running,
   the window reads `stats.json`.
 
@@ -57,6 +58,12 @@ on the approach.
   `knock`, `jingle`, `ringing`.
 - **Keep detection threads apart.** MSAA and UI Automation calls can block when an app (or Explorer) hangs, so they run only
   on the element thread. The window thread must stay cheap: window borders, screen edges and clicks must not wait for a hung app.
+- **Files in `%LOCALAPPDATA%\MxHaptics` are written by two processes** (plugin and window). Read and write them only through
+  `SafeFile` (retries, a per-process temp file, atomic replace). The window applies each change to a freshly loaded
+  `settings.json`, never saves the copy it loaded when it opened. A file that exists but can't be read must never be
+  replaced by defaults or an empty `stats.json`.
+- **Plugin shutdown:** `PointerWatcher.Dispose` doesn't dispose its `CancellationTokenSource`; a thread stuck in MSAA/UIA may
+  still touch it after `Join` times out, and an exception there would take down Logi Plugin Service.
 - **Settings compatibility:** `settings.json` keeps the values `weak` / `medium` / `strong` and new properties need defaults,
   so older files keep loading.
 - **Settings window:** take colors only from `Theme.Current`, not `SystemColors`. Custom controls draw themselves;

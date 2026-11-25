@@ -19,6 +19,7 @@ namespace Loupedeck.MxHapticsPlugin
         private const Int64 WindowDebounceMs = 90;
         private const Int64 EdgeDebounceMs = 150;
         private const Int64 ControlDebounceMs = 60;
+        private const Int64 StationaryHitTestMs = 300;
 
         // MSAA role, které považujeme za "tlačítko"
         private static readonly Int32[] ClickableRoles =
@@ -65,7 +66,9 @@ namespace Loupedeck.MxHapticsPlugin
             this._cts.Cancel();
             this._windowThread?.Join(500);
             this._controlThread?.Join(500);
-            this._cts.Dispose();
+
+            // _cts záměrně neuvolňujeme: vlákno prvků může po Join(500) ještě viset v MSAA/UIA nad zaseklou aplikací
+            // a po návratu sahá na token.WaitHandle; ObjectDisposedException by na pozadí shodila celou Logi Plugin Service.
         }
 
         private Int64 Now => this._clock.ElapsedMilliseconds;
@@ -126,6 +129,15 @@ namespace Loupedeck.MxHapticsPlugin
                         continue;
                     }
 
+                    // tooltipy a stíny nejsou okno, ze kterého se odchází ani do kterého se vstupuje: lastRoot zůstává,
+                    // jinak by návrat z tooltipu na okno pod ním hlásil falešnou hranici
+                    if (IsIgnoredWindow(root))
+                    {
+                        candidate = IntPtr.Zero;
+                        candidateTicks = 0;
+                        continue;
+                    }
+
                     // nové okno musí vydržet 2 vzorky – filtruje problikávání popupů/tooltipů
                     if (root != candidate)
                     {
@@ -143,7 +155,7 @@ namespace Loupedeck.MxHapticsPlugin
                     var hadPrevious = lastRoot != IntPtr.Zero;
                     lastRoot = root;
 
-                    if (hadPrevious && !IsIgnoredWindow(root) && this.Now - lastWindowEvent > WindowDebounceMs)
+                    if (hadPrevious && this.Now - lastWindowEvent > WindowDebounceMs)
                     {
                         lastWindowEvent = this.Now;
                         this._raise(Reactions.WindowBorder);
@@ -161,27 +173,50 @@ namespace Loupedeck.MxHapticsPlugin
             var token = this._cts.Token;
             String lastKey = null;
             var lastPos = new POINT { X = Int32.MinValue };
+            var lastRoot = IntPtr.Zero;
+            var lastHitTest = Int64.MinValue / 2;
             var lastControlEvent = Int64.MinValue / 2;
+            var wasDown = false;
             using var taskbar = new TaskbarButtons();
 
             while (!token.WaitHandle.WaitOne(ControlPollMs))
             {
                 try
                 {
-                    if (!Native.GetCursorPos(out var p) || (p.X == lastPos.X && p.Y == lastPos.Y))
+                    if (!Native.GetCursorPos(out var p))
                     {
                         continue;
                     }
 
+                    var moved = p.X != lastPos.X || p.Y != lastPos.Y;
                     lastPos = p;
+                    var down = Native.IsButtonDown();
+                    var released = wasDown && !down;
+                    wasDown = down;
 
-                    // při tažení (výběr, drag&drop) prvky ignorujeme
-                    if (Native.IsButtonDown())
+                    // při tažení (výběr, drag&drop) prvky ignorujeme; stisk na místě prvek pod kurzorem nemění
+                    if (down)
                     {
-                        lastKey = null;
-                        this._hoverKey = null;
+                        if (moved)
+                        {
+                            lastKey = null;
+                            this._hoverKey = null;
+                        }
+
                         continue;
                     }
+
+                    // _hoverKey (pro kliknutí) musí sedět i u stojícího kurzoru: po puštění tlačítka, při změně okna
+                    // pod kurzorem (zavřený dialog) a pravidelně (posunutý obsah). Vibraci najetí dává jen pohyb.
+                    var root = Native.GetAncestor(Native.WindowFromPoint(p), Native.GA_ROOT);
+                    var rootChanged = root != lastRoot;
+                    lastRoot = root;
+                    if (!moved && !released && !rootChanged && this.Now - lastHitTest < StationaryHitTestMs)
+                    {
+                        continue;
+                    }
+
+                    lastHitTest = this.Now;
 
                     // hlavní lišta Windows 11 je pro MSAA jeden blok, tlačítka bere z UI Automation
                     String key = null;
@@ -191,7 +226,7 @@ namespace Loupedeck.MxHapticsPlugin
                     }
 
                     this._hoverKey = key;
-                    if (key != null && key != lastKey && this.Now - lastControlEvent > ControlDebounceMs)
+                    if (moved && key != null && key != lastKey && this.Now - lastControlEvent > ControlDebounceMs)
                     {
                         lastControlEvent = this.Now;
                         this._raise(Reactions.ControlHover);

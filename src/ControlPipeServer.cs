@@ -15,6 +15,8 @@ namespace Loupedeck.MxHapticsPlugin
     /// </summary>
     internal sealed class ControlPipeServer : IDisposable
     {
+        private const Int32 ConnectionTimeoutMs = 2000;
+
         private readonly Func<String, String> _handler;
         private readonly CancellationTokenSource _cts = new();
         private Task _loop;
@@ -55,13 +57,21 @@ namespace Loupedeck.MxHapticsPlugin
                     using var reader = new StreamReader(server, leaveOpen: true);
                     using var writer = new StreamWriter(server, leaveOpen: true) { AutoFlush = true };
 
-                    var line = await reader.ReadLineAsync(token).ConfigureAwait(false);
+                    // roura má jedinou instanci: klient, který se připojí a mlčí, ji nesmí zablokovat pro ostatní
+                    using var connection = CancellationTokenSource.CreateLinkedTokenSource(token);
+                    connection.CancelAfter(ConnectionTimeoutMs);
+
+                    var line = await reader.ReadLineAsync(connection.Token).ConfigureAwait(false);
                     var response = line == null ? "error empty" : this._handler(line.Trim());
-                    await writer.WriteLineAsync(response).ConfigureAwait(false);
+                    await writer.WriteLineAsync(response.AsMemory(), connection.Token).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    return;
                 }
                 catch (OperationCanceledException)
                 {
-                    return;
+                    Trace.WriteLine("MxHaptics pipe: klient neposlal příkaz včas, spojení zavřeno");
                 }
                 catch (Exception ex)
                 {

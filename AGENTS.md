@@ -55,6 +55,11 @@ Logi Plugin Service. Nastavení má samostatné WinForms okno (`settings/`), iko
 - Hlavní lišta: MSAA ani UIA `ElementFromPoint` do XAML lišty nevidí, proto `FindAll` tlačítek + vlastní hit-test. UIA vrací fyzické
   pixely, porovnávej s `GetPhysicalCursorPos`. Rozhraní v `TaskbarButtons.cs` jsou prefixy vtable z `UIAutomationClient.h`, pořadí nepřehazuj.
 - Lišta jde vypnout volbou `taskbarButtons` v JSON (výchozí `true`, v okně „Include Windows taskbar buttons“ v sekci „Buttons and links“). Plugin ji čte při každém vzorku přes delegát z `MxHapticsPlugin`.
+- Soubory v `%LOCALAPPDATA%\MxHaptics` píšou dva procesy: jen přes `SafeFile` (opakování, tmp s PID; zamčený cíl hlásí
+  i `UnauthorizedAccessException`). Okno ukládá změnu na čerstvě načtený soubor (`Change`), plugin při nečitelném souboru
+  drží dosavadní stav (`TryLoad`), statistiku nepřečtenou při startu nepřepíše a sloučí ji později (`MergeFrom`).
+- `PointerWatcher.Dispose` neuvolňuje `_cts` (vlákno visící v MSAA/UIA by po návratu shodilo Logi Plugin Service). Roura:
+  server zavře mlčící spojení po 2 s, klient čeká na odpověď nejvýš 1,5 s.
 - Statistika: počítá se v `RaiseReaction` až po kontrole vypínačů (test z okna ne), pod `_statsLock`. Plugin ukládá `stats.json`
   jednou za minutu a v `Unload`; okno čte přes `stats` z roury (na pozadí, `Task.Run`), jinak ze souboru. Okno do souboru nepíše.
 - Kliknutí (`click`) hlásí vlákno oken (10 ms, hrana stisku L/P tlačítka), ale jen když `_hoverKey` (píše vlákno prvků) není null.

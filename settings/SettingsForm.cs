@@ -33,7 +33,8 @@ namespace MxHaptics.Settings
         private static readonly CultureInfo English = CultureInfo.GetCultureInfo("en-US");
 
         private readonly Theme _theme = Theme.Current;
-        private readonly HapticsSettings _settings;
+        private HapticsSettings _settings;
+        private DateTime _settingsStamp;
         private readonly HapticsSettings _defaults = new();
         private readonly Boolean _readOnly;
         private readonly ToggleSwitch _masterSwitch;
@@ -61,6 +62,7 @@ namespace MxHaptics.Settings
         {
             this._readOnly = readOnly;
             this._settings = readOnly ? new HapticsSettings() : HapticsSettings.Load();
+            this._settingsStamp = SettingsStamp();
 
             this.Text = "MX Haptics – Settings";
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -116,9 +118,8 @@ namespace MxHaptics.Settings
             master.SetColumnSpan(masterDesc, 2);
             this._masterSwitch.CheckedChanged += (_, _) =>
             {
-                this._settings.Enabled = this._masterSwitch.Checked;
-                this.UpdateEnabledState();
-                this.SaveAndNotify();
+                var on = this._masterSwitch.Checked;
+                this.Change(s => s.Enabled = on);
             };
             this.AddSection(master);
 
@@ -156,7 +157,11 @@ namespace MxHaptics.Settings
             {
                 this.RefreshStats();
                 var timer = new Timer { Interval = 2000 };
-                timer.Tick += (_, _) => this.RefreshStats();
+                timer.Tick += (_, _) =>
+                {
+                    this.ReloadIfChangedOutside();
+                    this.RefreshStats();
+                };
                 timer.Start();
                 this.FormClosed += (_, _) => timer.Dispose();
             }
@@ -178,7 +183,7 @@ namespace MxHaptics.Settings
 
         private TableLayoutPanel BuildReaction(String reaction, String title, String description)
         {
-            var rs = this._settings.For(reaction);
+            var rs = this._settings.For(reaction); // jen pro výchozí stav prvků; změny jdou přes Change()
             var defaultStrength = this._defaults.For(reaction).Strength;
             var row = new RowUi { Reaction = reaction };
             var section = this.Section();
@@ -205,8 +210,8 @@ namespace MxHaptics.Settings
                 };
                 this._taskbarToggle.CheckedChanged += (_, _) =>
                 {
-                    this._settings.TaskbarButtons = this._taskbarToggle.Checked;
-                    this.SaveAndNotify();
+                    var on = this._taskbarToggle.Checked;
+                    this.Change(s => s.TaskbarButtons = on);
                 };
                 section.Controls.Add(taskbarLabel, 0, r);
                 section.Controls.Add(this._taskbarToggle, 1, r++);
@@ -232,8 +237,7 @@ namespace MxHaptics.Settings
                         return;
                     }
 
-                    rs.Strength = strength;
-                    this.SaveAndNotify();
+                    this.Change(s => s.For(reaction).Strength = strength);
                     this.Test(reaction, strength);
                 };
                 strengths.Controls.Add(radio);
@@ -244,7 +248,7 @@ namespace MxHaptics.Settings
 
             // „Try it“ vlevo jako „OPEN ACTIONS RING“, počty vpravo
             row.Test = new LinkButton { Text = "Try it", Anchor = AnchorStyles.Left, Margin = new Padding(0, 10, 0, 0), AccessibleName = $"Try {title}" };
-            row.Test.Click += (_, _) => this.Test(reaction, rs.Strength);
+            row.Test.Click += (_, _) => this.Test(reaction, this._settings.For(reaction).Strength);
             row.Count = this.Secondary(String.Empty);
             row.Count.Anchor = AnchorStyles.Right;
             row.Count.Margin = new Padding(16, 10, 0, 0);
@@ -253,9 +257,8 @@ namespace MxHaptics.Settings
 
             row.Toggle.CheckedChanged += (_, _) =>
             {
-                rs.Enabled = row.Toggle.Checked;
-                this.UpdateEnabledState();
-                this.SaveAndNotify();
+                var on = row.Toggle.Checked;
+                this.Change(s => s.For(reaction).Enabled = on);
             };
 
             this._rows.Add(row);
@@ -371,16 +374,22 @@ namespace MxHaptics.Settings
                 : "No vibrations counted yet";
         }
 
-        private void SaveAndNotify()
+        /// <summary>
+        /// Uloží jednu změnu. Základem je aktuální soubor, ne stav načtený při otevření okna: plugin (akce Toggle)
+        /// mezitím mohl změnit hlavní vypínač a celý starý objekt by jeho změnu vrátil.
+        /// </summary>
+        private void Change(Action<HapticsSettings> apply)
         {
             if (this._loading)
             {
                 return;
             }
 
+            var settings = HapticsSettings.TryLoad(out var fresh) ? fresh : this._settings;
+            apply(settings);
             try
             {
-                this._settings.Save();
+                settings.Save();
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -388,7 +397,64 @@ namespace MxHaptics.Settings
                 return;
             }
 
+            this._settingsStamp = SettingsStamp();
+            if (!ReferenceEquals(settings, this._settings))
+            {
+                this._settings = settings;
+                this.ApplyToControls(); // přenese i změny zvenku, třeba hlavní vypínač z Options+
+            }
+
+            this.UpdateEnabledState();
             this.UpdateStatus(PluginClient.Send("reload") != null ? "Saved." : null);
+        }
+
+        /// <summary>Soubor změnil někdo jiný (akce Toggle v Options+, ruční úprava): ukázat jeho stav.</summary>
+        private void ReloadIfChangedOutside()
+        {
+            if (SettingsStamp() == this._settingsStamp || !HapticsSettings.TryLoad(out var fresh))
+            {
+                return;
+            }
+
+            this._settingsStamp = SettingsStamp();
+            this._settings = fresh;
+            this.ApplyToControls();
+        }
+
+        private static DateTime SettingsStamp()
+        {
+            try
+            {
+                return File.GetLastWriteTimeUtc(HapticsSettings.FilePath);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return DateTime.MinValue;
+            }
+        }
+
+        /// <summary>Nastaví prvky podle <see cref="_settings"/> bez ukládání a bez zkušební vibrace.</summary>
+        private void ApplyToControls()
+        {
+            var wasLoading = this._loading;
+            this._loading = true;
+            try
+            {
+                this._masterSwitch.Checked = this._settings.Enabled;
+                this._taskbarToggle.Checked = this._settings.TaskbarButtons;
+                foreach (var row in this._rows)
+                {
+                    var rs = this._settings.For(row.Reaction);
+                    row.Toggle.Checked = rs.Enabled;
+                    row.Radios[(Int32)rs.Strength].Checked = true;
+                }
+
+                this.UpdateEnabledState();
+            }
+            finally
+            {
+                this._loading = wasLoading;
+            }
         }
 
         private void Test(String reaction, Strength strength)
