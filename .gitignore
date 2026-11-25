@@ -1,6 +1,22 @@
-.tools/
+# .NET build
 bin/
 obj/
 build/
 *.user
+*.suo
 .vs/
+.idea/
+.vscode/
+*.binlog
+
+# Lokální nástroje (např. dotnet-install)
+.tools/
+
+# Logy a dočasné soubory
+*.log
+*.tmp
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
